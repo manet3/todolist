@@ -20,7 +20,7 @@ Cílem je vytvořit jednoduchý todo list a to jak klientskou aplikaci (ve WPF),
 
 ## Fáze 2 - Server
  - Přidej do solution další projekt, který bude implementovat http server (buď můžeš použít konzolovou app a HTTPListener nebo udělat jednoduchou ASP.NET aplikaci).
- - Server bude poskytovat REST API pro klientskou aplikaci a ukládat data do databáze. Bude mít tyto endpointy:
+ - Server bude poskytovat REST API pro klientskou aplikaci a ukládat data do databáze (SQL, ORM SQLite). Bude mít tyto endpointy:
  - /List - GET request vrátí JSON obsahující všechny úkoly
  - /Add - POST request s názvem nového úkolu vytvoří na serveru nový úkol.
  - /Change - PUT/PATCH request umožňující aktualizovat to jeslti je úkol hotový nebo ne.
