@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace ToDoList
+namespace ToDoList.Client
 {
     class ToDoVM: INotifyPropertyChanged
     {
@@ -22,7 +22,6 @@ namespace ToDoList
         public ICommand AddCommand { get; set; }
         public ICommand RemoveCommand { get; set; }
         public ICommand SelectedCommand { get; set; }
-        public ICommand CheckedCommand { get; set; }
         #endregion
 
         public string ToDoItem { get; set; } = "Make the ToDo list";
@@ -33,29 +32,39 @@ namespace ToDoList
                 : Visibility.Visible;
         }
 
-        public ObservableCollection<CheckBox> ToDo { get; set; } 
-            = new ObservableCollection<CheckBox>();
-        private List<CheckBox> Selected = new List<CheckBox>();
-        private List<CheckBox> Checked = new List<CheckBox>();
+        public ObservableCollection<TaskVM> ToDo { get; private set; } 
+            = new ObservableCollection<TaskVM>();
+        private List<TaskVM> Selected = new List<TaskVM>();
+
+        private ToDoModel model;
 
         public ToDoVM()
         {
             AddCommand = new Command(ToDoAdd, ()=>ToDoItem != null && !ToDoItem.Equals(""));
             RemoveCommand = new Command(ToDoRemove);
             SelectedCommand = new Command(SelectedChanged);
-            CheckedCommand = new Command(CheckedAdd);
+            TaskVM.CheckedChanged += CheckedAdd;
+            model = new ToDoModel();
+            ToDoItemsGet();
         }
 
-        private void CheckedAdd(object obj)
+        private void ToDoItemsGet()
         {
-            Checked.Add((CheckBox)obj);
+            var items = from item in model.Tasks
+                        select new TaskVM(item);
+            ToDo = new ObservableCollection<TaskVM>(items);
+        }
+
+        private void CheckedAdd(object sender, bool isChecked)
+        {
+            model.AddItem(((TaskVM)sender).Model);
         }
 
         private void SelectedChanged(object obj)
         {
             //a crutchy way
             var selectedItems = ((ListView)obj).SelectedItems;
-            var buffer = new CheckBox[selectedItems.Count];
+            var buffer = new TaskVM[selectedItems.Count];
             selectedItems.CopyTo(buffer, 0);
             Selected = buffer.ToList();
             OnPropertyChanged(nameof(ButtonRemoveVis));
@@ -63,19 +72,18 @@ namespace ToDoList
 
         private void ToDoAdd(object obj)
         {
-            var box = new CheckBox
-            {
-                Content = ToDoItem,
-                Command = CheckedCommand
-            };
-            box.CommandParameter = box;
-            ToDo.Add(box);
+            var newItem = new TaskVM(ToDoItem, false);
+            model.AddItem(newItem.Model);
+            ToDo.Add(newItem);
         }
 
         private void ToDoRemove(object obj)
         {
             foreach (var item in Selected)
+            {
                 ToDo.Remove(item);
+                model.DeleteItem(item.Model);
+            }
             Selected.Clear();
         }
 

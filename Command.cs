@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace ToDoList
+namespace ToDoList.Client
 {
     class Command:ICommand
     {
