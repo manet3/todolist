@@ -2,6 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ScaleTransform x:Key="mouseOverScale" ScaleX="1.1" ScaleY="1.1"/>
     <ScaleTransform x:Key="pressedScale" ScaleX="0.8" ScaleY="0.8"/>
+    
     <Style x:Key="add-removeButton" TargetType="Button">
         <Setter Property="FontSize" Value="50"></Setter>
         <Setter Property="FontWeight" Value="ExtraBold"></Setter>
@@ -85,4 +86,8 @@
             </Trigger>
         </Style.Triggers>
     </Style>
+
+    <!--<Style x:Key="listBox" TargetType="ListView">
+        <Setter Property="ScrollViewer.Te"
+    </Style>-->
 </ResourceDictionary>

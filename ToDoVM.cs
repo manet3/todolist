@@ -43,16 +43,26 @@ namespace ToDoList.Client
             AddCommand = new Command(ToDoAdd, ()=>ToDoItem != null && !ToDoItem.Equals(""));
             RemoveCommand = new Command(ToDoRemove);
             SelectedCommand = new Command(SelectedChanged);
-            TaskVM.CheckedChanged += CheckedAdd;
             model = new ToDoModel();
-            ToDoItemsGet();
+            TaskVM.CheckedChanged += CheckedAdd;
+            Synchronisator.SynchChanged += SyncHandler;
+            model.GotItems += ToDoItemsGet;
+            model.ReadData();
+        }
+
+        private void SyncHandler(SynchState state)
+        {
         }
 
         private void ToDoItemsGet()
         {
-            var items = from item in model.Tasks
-                        select new TaskVM(item);
+            if (model.Tasks == null)
+                return;
+
+            var items = model.Tasks.Select(x=> new TaskVM(x));   
+            
             ToDo = new ObservableCollection<TaskVM>(items);
+            OnPropertyChanged(nameof(ToDo));
         }
 
         private void CheckedAdd(object sender, bool isChecked)
@@ -72,7 +82,10 @@ namespace ToDoList.Client
 
         private void ToDoAdd(object obj)
         {
-            var newItem = new TaskVM(ToDoItem, false);
+            var itemIndex = ToDo.Count != 0
+                ? ToDo.Max(x => x.Model.Index) + 1
+                : 0;
+            var newItem = new TaskVM(ToDoItem, false, itemIndex);
             model.AddItem(newItem.Model);
             ToDo.Add(newItem);
         }

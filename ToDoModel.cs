@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,19 +11,39 @@ namespace ToDoList.Client
     {
         public HashSet<TaskModel> Tasks;
 
-        public ToDoModel()
+        public event Action GotItems;
+
+        public void ReadData()
         {
-            Tasks = Synchronisator.GetTasks();
+            var readThread = new Thread(() =>
+            {
+                Tasks = Synchronisator.GetTasks();
+                GotItems?.Invoke();
+                Thread.CurrentThread.Abort();
+            })
+            { IsBackground = true};
+
+            readThread.Start();
         }
 
         public void AddItem(TaskModel task)
         {
-            Synchronisator.Add(task);
+            SendItem(Synchronisator.Add, task);
         }
 
         public void DeleteItem(TaskModel task)
         {
-            Synchronisator.DeleteTask(task);
+            SendItem(Synchronisator.DeleteTask, task);
+        }
+
+        public void SendItem(Action<TaskModel> action, TaskModel task)
+        {
+            var sendThread = new Thread(() =>
+            {
+                action(task);
+                Thread.CurrentThread.Abort();
+            });
+            sendThread.Start();
         }
     }
 }

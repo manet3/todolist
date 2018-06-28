@@ -43,7 +43,10 @@ namespace ToDoList.Server.Models
         {
             try
             {
-                items = dbOpen.Select<TaskModel>().Reverse<TaskModel>();
+                items = dbOpen
+                    .Select<TaskModel>()
+                    .ToList()
+                    .OrderBy(x => x.Index);
                 return true;
             }
             catch (System.Data.SQLite.SQLiteException)
@@ -51,6 +54,13 @@ namespace ToDoList.Server.Models
                 items = new TaskModel[0];
                 return false;
             }
+        }
+
+        public static bool GetDbItem(int id, ref TaskModel item)
+        {
+            item = dbOpen.Single<TaskModel>(x=> x.Id == id);
+            return dbOpen.Exists<TaskModel>(new { Id = id });
+            
         }
 
         public static bool UpdateDB( TaskModel task)
@@ -64,7 +74,6 @@ namespace ToDoList.Server.Models
         public static bool RemoveDBItem(int id)
         {
             dbOpen.DeleteById<TaskModel>(id);
-            dbOpen.Dispose();
             return true;
         }
     }

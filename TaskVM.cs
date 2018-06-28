@@ -29,10 +29,16 @@ namespace ToDoList.Client
         {
         }
 
+        public TaskVM(string content, bool state, ulong index) : this()
+        {
+            Content = content;
+            Model = new TaskModel(content, state, index);
+        }
+
         public TaskVM(string content, bool state):this()
         {
             Content = content;
-            Model = new TaskModel(content, state);
+            Model = new TaskModel(content, state, 0);
         }
 
         public TaskVM(TaskModel model):this()
@@ -40,6 +46,7 @@ namespace ToDoList.Client
             Content = model.Name;
             Model = model;
         }
+
 
 
     }

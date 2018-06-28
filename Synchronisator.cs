@@ -40,6 +40,7 @@ namespace ToDoList.Client
         {
             var endpoint = requestType == HttpMethod.Put ? "change" : "add";
             SynchChanged?.Invoke(SynchState.Started);
+
             var json = JsonConvert.SerializeObject(task);
             var req_message = new HttpRequestMessage(requestType, new Uri(http, endpoint))
             {
@@ -47,9 +48,13 @@ namespace ToDoList.Client
             };
 
             using (Task<HttpResponseMessage> putTask = Client.SendAsync(req_message))
-                if (putTask.Result.StatusCode == HttpStatusCode.OK)
-                    SynchChanged?.Invoke(SynchState.Complete);
-                else SynchChanged?.Invoke(SynchState.Failed);
+            {
+                putTask.Wait();
+                var state = putTask.Result.StatusCode == HttpStatusCode.OK
+                    ? SynchState.Complete
+                    : SynchState.Failed;
+                SynchChanged?.Invoke(state);
+            }
         }
 
         public static HashSet<TaskModel> GetTasks()
@@ -73,6 +78,7 @@ namespace ToDoList.Client
         {
             SynchChanged?.Invoke(SynchState.Started);
             Task <HttpResponseMessage> res = Client.DeleteAsync(new Uri(http, $"remove/{task.Id}"));
+
             res.Wait();
             if(res.Result.StatusCode == HttpStatusCode.OK)
                 SynchChanged?.Invoke(SynchState.Complete);

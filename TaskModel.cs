@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ServStack =  ServiceStack.DataAnnotations;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ToDoList
 {
@@ -21,11 +17,15 @@ namespace ToDoList
         [DataMember(Order = 0)]
         public int Id { get; private set; }
 
-        public TaskModel(string name, bool state)
+        [DataMember]
+        public ulong Index { get; set; }
+
+        public TaskModel(string name, bool state, ulong index)
         {
             State = state;
             Name = name;
             Id = GetHashCode();
+            Index = index;
         }
 
         public override int GetHashCode()

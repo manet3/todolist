@@ -21,10 +21,6 @@ namespace ToDoList.Server.Controllers
             public int GetHashCode(TaskModel obj) => obj.GetHashCode();
         }
 
-        private List<TaskModel> _tasks
-            = new List<TaskModel> { new TaskModel ( "Make something",true),
-            new TaskModel("Make another thing",false) };
-
         public TasksController()
         {
         }
@@ -37,9 +33,11 @@ namespace ToDoList.Server.Controllers
             return dbItems;
         }
 
-        public string Get(int id)
+        public TaskModel Get(int id)
         {
-            return (id >= _tasks.Count ? _tasks[id] : _tasks.Last()).Name;
+            TaskModel item = null;
+            ToDoDBModel.UsingDb(()=> ToDoDBModel.GetDbItem(id, ref item));
+            return item;
         }
 
         [ActionName("Add")]
@@ -52,14 +50,14 @@ namespace ToDoList.Server.Controllers
         [ActionName("Change")]
         public void EditTask(IEnumerable<TaskModel> new_tasks)
         {
-            var chgTable = new_tasks
-                .Zip(new_tasks, (k, v) => new { key = k.Id, value = v })
-                .ToDictionary(t => t.key,  t=> t.value);
-            var toAdd = new List<TaskModel>();
-            foreach (var task in _tasks)
-                if (chgTable.ContainsKey(task.Id))
-                    task.State = chgTable[task.Id].State;
-            _tasks.AddRange(toAdd);
+            //var chgTable = new_tasks
+            //    .Zip(new_tasks, (k, v) => new { key = k.Id, value = v })
+            //    .ToDictionary(t => t.key,  t=> t.value);
+            //var toAdd = new List<TaskModel>();
+            //foreach (var task in _tasks)
+            //    if (chgTable.ContainsKey(task.Id))
+            //        task.State = chgTable[task.Id].State;
+            //_tasks.AddRange(toAdd);
         }
 
         [ActionName("Remove")]
