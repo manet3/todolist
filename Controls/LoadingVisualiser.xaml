@@ -3,38 +3,45 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:ToDoList.Client"
              mc:Ignorable="d" 
              Name="loadingControl"
-             d:DesignHeight="300" d:DesignWidth="300" 
-             DataContext="{Binding RelativeSource={RelativeSource Self}}">
+             d:DesignHeight="300" d:DesignWidth="300" >
     
     <UserControl.Resources>
         <Storyboard x:Key="ellipseMove" RepeatBehavior="Forever">
-            <DoubleAnimation From="0" To="50"
-                                 Storyboard.TargetProperty ="(Canvas.Left)"
-                                 DecelerationRatio="0.4" 
-                                 Duration="0:0:2"/>
+            <DoubleAnimation From="0" To="104"
+                             Storyboard.TargetProperty ="(Canvas.Left)"
+                             DecelerationRatio="0.4" 
+                             Duration="0:0:2.3"/>
 
             <DoubleAnimation From="0" To="1" 
-                                 Storyboard.TargetProperty ="Opacity"
-                                 Duration="0:0:0.5"/>
+                             AutoReverse="True"
+                             Storyboard.TargetProperty ="Opacity"
+                             Duration="0:0:1.5"/>
+            
+            <DoubleAnimation To="7" 
+                             AutoReverse="True"
+                             Storyboard.TargetProperty ="Height"
+                             Duration="0:0:1.5"/>
 
-            <DoubleAnimation From="50" To="100"
-                                 BeginTime="0:0:1.8"
-                                 Storyboard.TargetProperty ="(Canvas.Left)"
-                                 AccelerationRatio="1" 
-                                 Duration="0:0:1"/>
-
-            <DoubleAnimation From="1" To="0" 
-                                 BeginTime="0:0:1.8"
-                                 Storyboard.TargetProperty ="Opacity"
-                                 Duration="0:0:1"/>
+            <DoubleAnimation To="200"
+                             IsAdditive="True"
+                             BeginTime="0:0:2"
+                             Storyboard.TargetProperty ="(Canvas.Left)"
+                             AccelerationRatio="1" 
+                             Duration="0:0:1"/>
         </Storyboard>
 
         <Style TargetType="Ellipse">
+            <Setter Property="Height" Value="2"></Setter>
+            <Setter Property="Width" Value="{Binding Height, RelativeSource={RelativeSource Self}}"/>
+            <Setter Property="Fill" Value="DimGray"></Setter>
+            <Setter Property="Canvas.Top" Value="2.5"></Setter>
+            <Setter Property="Visibility" Value="{Binding LoaderVis, 
+                RelativeSource={RelativeSource AncestorType=UserControl}}"></Setter>
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsActive, ElementName=loadingControl}" 
+                <DataTrigger Binding="{Binding IsActive, 
+                    RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                      Value="true">
                     <DataTrigger.EnterActions>
                         <BeginStoryboard Storyboard="{StaticResource ellipseMove}"/>
@@ -44,10 +51,11 @@
         </Style>
     </UserControl.Resources>
     
-    <ItemsControl ItemsSource="{Binding Particles}">
+    <ItemsControl ItemsSource="{Binding Particles, 
+        RelativeSource={RelativeSource AncestorType=UserControl}}">
         <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
-                <Canvas Width="100" Height="10"/>
+                <Canvas Width="200" Height="10"/>
             </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
     </ItemsControl>

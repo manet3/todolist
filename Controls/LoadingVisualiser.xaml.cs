@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,12 +21,13 @@ namespace ToDoList.Client.Controls
     /// <summary>
     /// Interaction logic for DownloadVis.xaml
     /// </summary>
-    public partial class LoadingVisualiser : UserControl
+    public partial class LoadingVisualiser : UserControl, INotifyPropertyChanged
     {
-        public ObservableCollection<Ellipse> Particles { get; set; }
-        public int ParticlesNumber = 3;
+        public event PropertyChangedEventHandler PropertyChanged;
+
 
         public static DependencyProperty IsActiveProperty;
+
 
         public bool IsActive
         {
@@ -33,6 +35,16 @@ namespace ToDoList.Client.Controls
             set => SetValue(IsActiveProperty, value);
         }
 
+        public ObservableCollection<Ellipse> Particles { get; set; }
+
+        public Visibility LoaderVis
+        {
+            get => IsActive
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        public int ParticlesNumber = 5;
 
         static LoadingVisualiser()
         {
@@ -40,7 +52,12 @@ namespace ToDoList.Client.Controls
                 "IsActive", 
                 typeof(bool), 
                 typeof(LoadingVisualiser),
-                new FrameworkPropertyMetadata(false));
+                new FrameworkPropertyMetadata(false, new PropertyChangedCallback(OnActiveChanged)));
+        }
+
+        private static void OnActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((LoadingVisualiser)d).OnPropertyChanged(nameof(LoaderVis));
         }
 
         public LoadingVisualiser()
@@ -54,21 +71,14 @@ namespace ToDoList.Client.Controls
         {
             DispatcherTimer timer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(500)
+                Interval = TimeSpan.FromMilliseconds(200)
             };
 
             var counter = 0;
 
             timer.Tick += (s, a) =>
             {
-                var ellipse = new Ellipse
-                {
-                    Height = 5,
-                    Width = 5,
-                    Fill = new SolidColorBrush(Colors.DimGray)
-                };
-                Canvas.SetTop(ellipse, 2.5);
-                Particles.Add(ellipse);
+                Particles.Add(new Ellipse());
                 counter++;
                 if (counter == ParticlesNumber)
                     timer.Stop();
@@ -77,6 +87,9 @@ namespace ToDoList.Client.Controls
             timer.Start();
         }
 
-
+        public void OnPropertyChanged(string property)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+        }
     }
 }
