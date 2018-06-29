@@ -25,6 +25,9 @@ namespace ToDoList.Client
         #endregion
 
         public string ToDoItem { get; set; } = "Make the ToDo list";
+
+        public bool IsDownloading { get; set; }
+
         public Visibility ButtonRemoveVis
         {
             get => Selected.Count == 0
@@ -34,6 +37,7 @@ namespace ToDoList.Client
 
         public ObservableCollection<TaskVM> ToDo { get; private set; } 
             = new ObservableCollection<TaskVM>();
+
         private List<TaskVM> Selected = new List<TaskVM>();
 
         private ToDoModel model;
@@ -52,6 +56,7 @@ namespace ToDoList.Client
 
         private void SyncHandler(SynchState state)
         {
+            IsDownloading = state == SynchState.Started;
         }
 
         private void ToDoItemsGet()

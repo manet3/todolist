@@ -74,6 +74,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Command.cs" />
+    <Compile Include="Controls\LoadingVisualiser.xaml.cs">
+      <DependentUpon>LoadingVisualiser.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ListMap.cs" />
     <Compile Include="Synchronisator.cs" />
     <Compile Include="Controls\TaskControl.xaml.cs">
@@ -83,6 +86,10 @@
     <Compile Include="TaskVM.cs" />
     <Compile Include="ToDoModel.cs" />
     <Compile Include="ToDoVM.cs" />
+    <Page Include="Controls\LoadingVisualiser.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

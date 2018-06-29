@@ -70,7 +70,16 @@ namespace ToDoList.Client
 
                 SynchChanged?.Invoke(SynchState.Complete);
 
-                return JsonConvert.DeserializeObject<HashSet<TaskModel>>(json);
+                try
+                {
+                    return JsonConvert.DeserializeObject<HashSet<TaskModel>>(json);
+                }
+                //unable to connect to server
+                catch(JsonReaderException)
+                {
+                    
+                    return new HashSet<TaskModel>();
+                }
             }
         }
 
