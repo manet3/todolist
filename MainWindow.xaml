@@ -80,7 +80,7 @@
             </ListView.ItemTemplate>
         </ListView>
         
-        <controls:LoadingVisualiser IsActive="{Binding IsDownloading}" 
+        <controls:LoadingVisualiser Background="Transparent" IsActive="{Binding IsDownloading}" 
                               Grid.Row="1" Grid.ColumnSpan="2" 
                               VerticalAlignment="Top" Margin="0,10,0,0"/>
     </Grid>

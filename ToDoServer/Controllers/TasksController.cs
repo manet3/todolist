@@ -10,17 +10,6 @@ namespace ToDoList.Server.Controllers
 {
     public class TasksController : ApiController
     {
-
-        public class NameComparer<T> : IEqualityComparer<TaskModel>
-        {
-            public bool Equals(TaskModel x, TaskModel y)
-            {
-                return x.Name.Equals(y.Name);
-            }
-
-            public int GetHashCode(TaskModel obj) => obj.GetHashCode();
-        }
-
         public TasksController()
         {
         }

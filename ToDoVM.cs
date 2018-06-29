@@ -16,6 +16,8 @@ namespace ToDoList.Client
         public event PropertyChangedEventHandler PropertyChanged;
 
         #region generic_fields
+        private ObservableCollection<TaskVM> _toDo;
+        private bool _isDownloading;
         #endregion
 
         #region ICommands
@@ -26,7 +28,15 @@ namespace ToDoList.Client
 
         public string ToDoItem { get; set; } = "Make the ToDo list";
 
-        public bool IsDownloading { get; set; }
+        public bool IsDownloading
+        {
+            get => _isDownloading;
+            set
+            {
+                _isDownloading = value;
+                OnPropertyChanged(nameof(IsDownloading));
+            }
+        }
 
         public Visibility ButtonRemoveVis
         {
@@ -35,8 +45,14 @@ namespace ToDoList.Client
                 : Visibility.Visible;
         }
 
-        public ObservableCollection<TaskVM> ToDo { get; private set; } 
-            = new ObservableCollection<TaskVM>();
+        public ObservableCollection<TaskVM> ToDo
+        {
+            get => _toDo; private set
+            {
+                _toDo = value;
+                OnPropertyChanged(nameof(ToDo));
+            }
+        }
 
         private List<TaskVM> Selected = new List<TaskVM>();
 
@@ -47,6 +63,7 @@ namespace ToDoList.Client
             AddCommand = new Command(ToDoAdd, ()=>ToDoItem != null && !ToDoItem.Equals(""));
             RemoveCommand = new Command(ToDoRemove);
             SelectedCommand = new Command(SelectedChanged);
+            ToDo = new ObservableCollection<TaskVM>();
             model = new ToDoModel();
             TaskVM.CheckedChanged += CheckedAdd;
             Synchronisator.SynchChanged += SyncHandler;
@@ -67,7 +84,6 @@ namespace ToDoList.Client
             var items = model.Tasks.Select(x=> new TaskVM(x));   
             
             ToDo = new ObservableCollection<TaskVM>(items);
-            OnPropertyChanged(nameof(ToDo));
         }
 
         private void CheckedAdd(object sender, bool isChecked)
