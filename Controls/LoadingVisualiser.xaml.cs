@@ -57,21 +57,24 @@ namespace ToDoList.Client.Controls
 
         private static void OnActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((LoadingVisualiser)d).OnPropertyChanged(nameof(LoaderVis));
+            var obj = (LoadingVisualiser)d;
+            if ((bool)e.NewValue)
+                obj.AddParticles();
+            else obj.RemoveParticles();
+            obj.OnPropertyChanged(nameof(LoaderVis));
         }
 
         public LoadingVisualiser()
         {
             InitializeComponent();
             Particles = new ObservableCollection<Ellipse>();
-            AddParticles();
         }
 
         private void AddParticles()
         {
             DispatcherTimer timer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(200)
+                Interval = TimeSpan.FromMilliseconds(300)
             };
 
             var counter = 0;
@@ -85,6 +88,11 @@ namespace ToDoList.Client.Controls
             };
 
             timer.Start();
+        }
+
+        private void RemoveParticles()
+        {
+            Particles.Clear();
         }
 
         public void OnPropertyChanged(string property)

@@ -18,15 +18,25 @@ namespace ToDoList.Client
         #region generic_fields
         private ObservableCollection<TaskVM> _toDo;
         private bool _isDownloading;
+        string _toDoItem;
         #endregion
 
         #region ICommands
-        public ICommand AddCommand { get; set; }
+        public ICommand AddCommand { get; set; } 
         public ICommand RemoveCommand { get; set; }
         public ICommand SelectedCommand { get; set; }
         #endregion
 
-        public string ToDoItem { get; set; } = "Make the ToDo list";
+        public string ToDoItem
+        {
+            get => _toDoItem;
+            set
+            {
+                _toDoItem = value;
+                OnPropertyChanged(nameof(ToDoItem));
+                ((Command)AddCommand).RaiseExecuteChanged();
+            }
+        }
 
         public bool IsDownloading
         {
@@ -60,7 +70,7 @@ namespace ToDoList.Client
 
         public ToDoVM()
         {
-            AddCommand = new Command(ToDoAdd, ()=>ToDoItem != null && !ToDoItem.Equals(""));
+            AddCommand = new Command(ToDoAdd, () => ToDoItem != null && !ToDoItem.Equals(""));
             RemoveCommand = new Command(ToDoRemove);
             SelectedCommand = new Command(SelectedChanged);
             ToDo = new ObservableCollection<TaskVM>();
@@ -71,9 +81,11 @@ namespace ToDoList.Client
             model.ReadData();
         }
 
-        private void SyncHandler(SynchState state)
+        private void SyncHandler(SyncState state)
         {
-            IsDownloading = state == SynchState.Started;
+            if (state == SyncState.Failed)
+                return;
+            IsDownloading = state == SyncState.Started;
         }
 
         private void ToDoItemsGet()

@@ -47,8 +47,10 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type TextBoxBase}">
-                    <Border Background="White" BorderBrush="Gray"
-                                    BorderThickness="3">
+                    <Border Background="White" 
+                            BorderBrush="Gray"
+                            BorderThickness="3"
+                            CornerRadius="3">
                         <Grid>
                             <ScrollViewer x:Name="PART_ContentHost"></ScrollViewer>
                             <ContentPresenter/>
@@ -63,18 +65,126 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-    
-    <Style x:Key="simpleList" TargetType="ListView" >
-        <Setter Property="FontSize" Value="20"></Setter>
+
+    <Style x:Key="simpleScrollBar" TargetType="ScrollBar">
+        <Setter Property="Width" Value="20"/>
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"></Setter>
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <RotateTransform Angle="180"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Track Name="PART_Track" 
+                           OverridesDefaultStyle="True">
+                        <Track.Thumb>
+                            <Thumb Margin="3,0,3,0">
+                                <Thumb.Template>
+                                    <ControlTemplate>
+                                        <Border BorderBrush="Gray" 
+                                                BorderThickness="3"
+                                                CornerRadius="5"
+                                                Background="White">
+                                            <Path HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  Data="M 0 0 L 5 0 M 0 6 L 5 6 M 0 12 L 5 12" 
+                                                  Stroke="Gray" StrokeThickness="3"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Thumb.Template>
+                            </Thumb>
+                        </Track.Thumb>
+                    </Track>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="simpleScrollViewer" TargetType="ScrollViewer">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollViewer">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ScrollContentPresenter Name="PART_ScrollContentPresenter"/>
+                        <ScrollBar Grid.Column="1"
+                                   Style="{DynamicResource simpleScrollBar}"
+                                   Name="PART_VerticalScrollBar"
+                                   Maximum="{TemplateBinding ScrollableHeight}"
+                                   ViewportSize="{TemplateBinding ViewportHeight}"
+                                   Value="{TemplateBinding VerticalOffset}"
+                                   Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}">
+                        </ScrollBar>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="listItem" TargetType="ListViewItem">
         <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
+                <ControlTemplate TargetType="ListViewItem">
+                    <Border Name="itemBorder" BorderThickness="2" BorderBrush="Transparent" 
+                            Background="Transparent"  CornerRadius="3">
+                        <!--<Border.Style>
+                            <Style>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{TemplateBinding IsSelected}">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard Duration="0:0:1">
+                                                    <ColorAnimationUsingKeyFrames>
+                                                        <ColorKeyFrameCollection>
+                                                            <DiscreteColorKeyFrame KeyTime="0:0:1" 
+                                                                                   Storyboard.TargetProperty="BorderBrush"
+                                                                                   Value="DimGray"/>
+                                                            <DiscreteColorKeyFrame KeyTime="0:0:1" 
+                                                                                   Storyboard.TargetProperty="Background"
+                                                                                   Value="LightGray"/>
+                                                        </ColorKeyFrameCollection>
+                                                    </ColorAnimationUsingKeyFrames>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions></DataTrigger>
+                                </Style.Triggers>
+                                
+                            </Style>
+                        </Border.Style>-->
+                        <ContentPresenter></ContentPresenter>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="itemBorder" Property="BorderBrush" Value="DimGray"/>
+                            <Setter TargetName="itemBorder" Property="Background" Value="LightGray"/></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ListView" >
+        <Setter Property="FontSize" Value="20"></Setter>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource listItem}"/>
+        <Setter Property="Template">
+            <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ListView}">
-                    <Border Background="White" BorderBrush="Gray"
-                                    BorderThickness="3">
+                    <Border Background="White"
+                            BorderBrush="Gray"
+                            BorderThickness="3"
+                            CornerRadius="3">
                         <Grid>
-                            <ScrollViewer x:Name="PART_ContentHost"></ScrollViewer>
-                            <ContentPresenter/>
+                            <ScrollViewer Padding="{TemplateBinding Padding}" 
+                                          Style="{DynamicResource simpleScrollViewer}">
+                                <ItemsPresenter/>
+                            </ScrollViewer>
                         </Grid>
                     </Border>
                 </ControlTemplate>
@@ -86,8 +196,4 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-
-    <!--<Style x:Key="listBox" TargetType="ListView">
-        <Setter Property="ScrollViewer.Te"
-    </Style>-->
 </ResourceDictionary>

@@ -24,5 +24,10 @@ namespace ToDoList.Client.Controls
         {
             InitializeComponent();
         }
+
+        private void UserControl_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            TaskCheck.IsChecked = !TaskCheck.IsChecked;
+        }
     }
 }

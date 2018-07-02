@@ -11,7 +11,7 @@ using System.Net.Http.Headers;
 
 namespace ToDoList.Client
 {
-    public enum SynchState
+    public enum SyncState
     {
         Started,
         Complete,
@@ -22,7 +22,7 @@ namespace ToDoList.Client
     {
         private static readonly HttpClient Client;
 
-        public static event Action<SynchState> SynchChanged;
+        public static event Action<SyncState> SynchChanged;
 
         private static Uri http;
 
@@ -39,7 +39,7 @@ namespace ToDoList.Client
         private static void SendRequest<T>(T task, HttpMethod requestType)
         {
             var endpoint = requestType == HttpMethod.Put ? "change" : "add";
-            SynchChanged?.Invoke(SynchState.Started);
+            SynchChanged?.Invoke(SyncState.Started);
 
             var json = JsonConvert.SerializeObject(task);
             var req_message = new HttpRequestMessage(requestType, new Uri(http, endpoint))
@@ -51,15 +51,15 @@ namespace ToDoList.Client
             {
                 putTask.Wait();
                 var state = putTask.Result.StatusCode == HttpStatusCode.OK
-                    ? SynchState.Complete
-                    : SynchState.Failed;
+                    ? SyncState.Complete
+                    : SyncState.Failed;
                 SynchChanged?.Invoke(state);
             }
         }
 
         public static HashSet<TaskModel> GetTasks()
         {
-            SynchChanged?.Invoke(SynchState.Started);
+            SynchChanged?.Invoke(SyncState.Started);
             using (Task<HttpResponseMessage> resp_message = Client.GetAsync(new Uri(http, "list")))
             using (Task<string> jsonTask = resp_message.Result
                     .Content
@@ -68,16 +68,16 @@ namespace ToDoList.Client
                 jsonTask.Wait();
                 var json = jsonTask.Result;
 
-                SynchChanged?.Invoke(SynchState.Complete);
-
                 try
                 {
-                    return JsonConvert.DeserializeObject<HashSet<TaskModel>>(json);
+                    var res = JsonConvert.DeserializeObject<HashSet<TaskModel>>(json);
+                    SynchChanged?.Invoke(SyncState.Complete);
+                    return res;
                 }
                 //unable to connect to server
                 catch(JsonReaderException)
                 {
-                    
+                    SynchChanged?.Invoke(SyncState.Failed);
                     return new HashSet<TaskModel>();
                 }
             }
@@ -85,12 +85,12 @@ namespace ToDoList.Client
 
         public static void DeleteTask(TaskModel task)
         {
-            SynchChanged?.Invoke(SynchState.Started);
+            SynchChanged?.Invoke(SyncState.Started);
             Task <HttpResponseMessage> res = Client.DeleteAsync(new Uri(http, $"remove/{task.Id}"));
 
             res.Wait();
             if(res.Result.StatusCode == HttpStatusCode.OK)
-                SynchChanged?.Invoke(SynchState.Complete);
+                SynchChanged?.Invoke(SyncState.Complete);
 
         }
     }

@@ -24,7 +24,7 @@ namespace ToDoList.Client
             _callable = callable;
         }
 
-        public void ReiseExecuteChanged()
+        public void RaiseExecuteChanged()
         {
             CanExecuteChanged?.Invoke(this, new EventArgs());
         }

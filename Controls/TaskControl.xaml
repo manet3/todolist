@@ -5,39 +5,59 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ToDoList"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300" DataContext="{Binding}">
+             d:DesignHeight="300" d:DesignWidth="300" DataContext="{Binding}" 
+             Background="White" PreviewMouseDoubleClick="UserControl_MouseDoubleClick">
 
-    <CheckBox Content="{Binding Content}" IsChecked="{Binding IsDone, Mode=TwoWay}" 
-              FontSize="15" 
-              FontWeight="Medium">
-        <CheckBox.Template>
-            <ControlTemplate TargetType="CheckBox">
-                <StackPanel Orientation="Horizontal" Height="20">
+    <StackPanel Orientation="Horizontal">
+        <CheckBox Name="TaskCheck"
+                  VerticalAlignment="Center"
+                  IsChecked="{Binding IsDone, Mode=TwoWay}" >
+            <CheckBox.Template>
+                <ControlTemplate TargetType="CheckBox">
                     <BulletDecorator Background="Transparent">
                         <BulletDecorator.Bullet>
                             <Border Width="15" Height="15" 
                                     BorderThickness="2" BorderBrush="Gray" 
                                     Padding="1,1,1,1">
-                                <Path Width="10" Height="10" 
-                                      Name="Mark"
-                                      Stroke="Black" StrokeThickness="1" 
-                                      Data="M 2 5 L 5 9 L 9 1"/>
+                                <Path Name="Mark" 
+                                          Visibility="Collapsed"
+                                          Width="10" Height="10" 
+                                          Stroke="Black" StrokeThickness="1" 
+                                          Data="M 2 5 L 5 9 L 9 1"/>
                             </Border>
                         </BulletDecorator.Bullet>
-                        <ContentPresenter Margin="5,0,0,0" 
-                                          VerticalAlignment="Center" 
-                                          HorizontalAlignment="Stretch" 
-                                          RecognizesAccessKey="True" 
-                                          Height="20">
-                        </ContentPresenter>
                     </BulletDecorator>
-                </StackPanel>
-                <ControlTemplate.Triggers>
-                    <Trigger Property="IsChecked" Value="false">
-                        <Setter TargetName="Mark" Property="Visibility" Value="Collapsed"></Setter>
-                    </Trigger>
-                </ControlTemplate.Triggers>
-            </ControlTemplate>
-        </CheckBox.Template>
-    </CheckBox>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="true">
+                            <Setter TargetName="Mark" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </CheckBox.Template>
+        </CheckBox>
+        <Grid Margin="5,0,0,0" VerticalAlignment="Center">
+            <TextBlock Name="TextContent" 
+                       VerticalAlignment="Center"
+                       Text="{Binding Content}"                   
+                       Height="20"
+                       FontSize="15" 
+                       FontWeight="Medium"/>
+            <Line Name="CrossOffLine" X1="0" Y1="0" Y2="0" 
+                  X2="{Binding ActualWidth, ElementName=TextContent}"
+                  VerticalAlignment="Center"
+                  Stroke="DimGray"
+                  StrokeThickness="2">
+                <Line.Style>
+                    <Style TargetType="Line">
+                        <Setter Property="Visibility" Value="Collapsed"></Setter>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsDone}" Value="true">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Line.Style>
+            </Line>
+        </Grid>
+    </StackPanel>
 </UserControl>

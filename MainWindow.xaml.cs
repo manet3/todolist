@@ -40,5 +40,10 @@ namespace ToDoList.Client
         {
             DragMove();
         }
+
+        private void GridFocus(object sender, MouseButtonEventArgs e)
+        {
+            ((UIElement)sender).Focus();
+        }
     }
 }
