@@ -25,9 +25,17 @@ namespace ToDoList.Client.Controls
             InitializeComponent();
         }
 
+        #region replace by mouse commands binding
         private void UserControl_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             TaskCheck.IsChecked = !TaskCheck.IsChecked;
         }
+
+        private void UserControl_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var vm = (TaskVM)((UserControl)sender).DataContext;
+            vm.IsSelected = !vm.IsSelected;
+        }
+        #endregion
     }
 }

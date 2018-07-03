@@ -24,7 +24,6 @@ namespace ToDoList.Client
         #region ICommands
         public ICommand AddCommand { get; set; } 
         public ICommand RemoveCommand { get; set; }
-        public ICommand SelectedCommand { get; set; }
         #endregion
 
         public string ToDoItem
@@ -72,10 +71,9 @@ namespace ToDoList.Client
         {
             AddCommand = new Command(ToDoAdd, () => ToDoItem != null && !ToDoItem.Equals(""));
             RemoveCommand = new Command(ToDoRemove);
-            SelectedCommand = new Command(SelectedChanged);
             ToDo = new ObservableCollection<TaskVM>();
             model = new ToDoModel();
-            TaskVM.CheckedChanged += CheckedAdd;
+            TaskVM.TaskChanged += OnTaskChanged;
             Synchronisator.SynchChanged += SyncHandler;
             model.GotItems += ToDoItemsGet;
             model.ReadData();
@@ -98,19 +96,19 @@ namespace ToDoList.Client
             ToDo = new ObservableCollection<TaskVM>(items);
         }
 
-        private void CheckedAdd(object sender, bool isChecked)
+        private void OnTaskChanged(object sender, TaskEventArgs e)
         {
-            model.AddItem(((TaskVM)sender).Model);
-        }
+            var task = (TaskVM)sender;
+            //update changed properties
+            if (e.IsCheckedChanged)
+                model.AddItem(task.Model);
 
-        private void SelectedChanged(object obj)
-        {
-            //a crutchy way
-            var selectedItems = ((ListView)obj).SelectedItems;
-            var buffer = new TaskVM[selectedItems.Count];
-            selectedItems.CopyTo(buffer, 0);
-            Selected = buffer.ToList();
+            if (!e.IsSelectedChanged) return;
+            if (task.IsSelected)
+                Selected.Add(task);
+            else Selected.Remove(task);
             OnPropertyChanged(nameof(ButtonRemoveVis));
+
         }
 
         private void ToDoAdd(object obj)

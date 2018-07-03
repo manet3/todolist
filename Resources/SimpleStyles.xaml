@@ -17,7 +17,9 @@
                                            RadiusY="10" Stroke="Gray" 
                                            StrokeThickness="3"></Rectangle>
                         <Viewbox>
-                            <ContentPresenter Margin="5,5,5, 10" Content="{TemplateBinding Property=Button.Content}"/>
+                            <ContentPresenter 
+                                Margin="5,5,5, 10" 
+                                Content="{TemplateBinding Property=Button.Content}"/>
                         </Viewbox>
                     </Grid>
                     <ControlTemplate.Triggers>
@@ -33,11 +35,14 @@
                             <Setter TargetName="templateRect" Property="Fill" Value="DimGray"></Setter>
                             <Setter Property="RenderTransform" Value="{StaticResource pressedScale}"/>
                         </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="LightGray"/>
+                            <Setter TargetName="templateRect" Property="Stroke" Value="LightGray"/>
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-
     </Style>
     
     <Style TargetType="TextBox" >
@@ -126,74 +131,23 @@
         </Setter>
     </Style>
 
-    <Style x:Key="listItem" TargetType="ListViewItem">
-        <Setter Property="OverridesDefaultStyle" Value="True"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="ListViewItem">
-                    <Border Name="itemBorder" BorderThickness="2" BorderBrush="Transparent" 
-                            Background="Transparent"  CornerRadius="3">
-                        <!--<Border.Style>
-                            <Style>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{TemplateBinding IsSelected}">
-                                        <DataTrigger.EnterActions>
-                                            <BeginStoryboard>
-                                                <Storyboard Duration="0:0:1">
-                                                    <ColorAnimationUsingKeyFrames>
-                                                        <ColorKeyFrameCollection>
-                                                            <DiscreteColorKeyFrame KeyTime="0:0:1" 
-                                                                                   Storyboard.TargetProperty="BorderBrush"
-                                                                                   Value="DimGray"/>
-                                                            <DiscreteColorKeyFrame KeyTime="0:0:1" 
-                                                                                   Storyboard.TargetProperty="Background"
-                                                                                   Value="LightGray"/>
-                                                        </ColorKeyFrameCollection>
-                                                    </ColorAnimationUsingKeyFrames>
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </DataTrigger.EnterActions></DataTrigger>
-                                </Style.Triggers>
-                                
-                            </Style>
-                        </Border.Style>-->
-                        <ContentPresenter></ContentPresenter>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="itemBorder" Property="BorderBrush" Value="DimGray"/>
-                            <Setter TargetName="itemBorder" Property="Background" Value="LightGray"/></Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <Style TargetType="ListView" >
+    <Style x:Key="simpleItemsControl" TargetType="ItemsControl" >
         <Setter Property="FontSize" Value="20"></Setter>
         <Setter Property="OverridesDefaultStyle" Value="True"/>
-        <Setter Property="ItemContainerStyle" Value="{StaticResource listItem}"/>
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type ListView}">
+                <ControlTemplate TargetType="{x:Type ItemsControl}">
                     <Border Background="White"
                             BorderBrush="Gray"
                             BorderThickness="3"
                             CornerRadius="3">
-                        <Grid>
-                            <ScrollViewer Padding="{TemplateBinding Padding}" 
+                        <ScrollViewer Padding="{TemplateBinding Padding}" 
                                           Style="{DynamicResource simpleScrollViewer}">
-                                <ItemsPresenter/>
-                            </ScrollViewer>
-                        </Grid>
+                            <ItemsPresenter/>
+                        </ScrollViewer>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Style.Triggers>
-            <Trigger Property="IsEnabled" Value="False">
-
-            </Trigger>
-        </Style.Triggers>
     </Style>
 </ResourceDictionary>

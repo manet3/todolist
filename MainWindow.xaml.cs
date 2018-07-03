@@ -25,12 +25,6 @@ namespace ToDoList.Client
             InitializeComponent();
         }
 
-        //REPLACE BY ATTACHED PROPERTY
-        private void todoList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ((ToDoVM)DataContext).SelectedCommand.Execute(sender);
-        }
-
         private void btCloseClick(object sender, RoutedEventArgs e)
         {
             Close();
