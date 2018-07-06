@@ -67,8 +67,7 @@ namespace ToDoList.Client
             model = new ToDoModel();
             TaskVM.CheckedChanged += CheckedAdd;
             Synchronisator.SynchChanged += SyncHandler;
-            model.GotItems += ToDoItemsGet;
-            model.ReadData();
+            ToDoItemsGetAsync();
         }
 
         private void SyncHandler(SynchState state)
@@ -76,19 +75,16 @@ namespace ToDoList.Client
             IsDownloading = state == SynchState.Started;
         }
 
-        private void ToDoItemsGet()
+        private async Task ToDoItemsGetAsync()
         {
-            if (model.Tasks == null)
-                return;
-
-            var items = model.Tasks.Select(x=> new TaskVM(x));   
-            
-            ToDo = new ObservableCollection<TaskVM>(items);
+            ToDo = new ObservableCollection<TaskVM>(
+                (await model.GetTasks())
+                .Select(x=> new TaskVM(x)));
         }
 
         private void CheckedAdd(object sender, bool isChecked)
         {
-            model.AddItem(((TaskVM)sender).Model);
+            model.AddItemAsync(((TaskVM)sender).Model);
         }
 
         private void SelectedChanged(object obj)
@@ -107,7 +103,7 @@ namespace ToDoList.Client
                 ? ToDo.Max(x => x.Model.Index) + 1
                 : 0;
             var newItem = new TaskVM(ToDoItem, false, itemIndex);
-            model.AddItem(newItem.Model);
+            model.AddItemAsync(newItem.Model);
             ToDo.Add(newItem);
         }
 
@@ -116,7 +112,7 @@ namespace ToDoList.Client
             foreach (var item in Selected)
             {
                 ToDo.Remove(item);
-                model.DeleteItem(item.Model);
+                model.DeleteItemAsync(item.Model);
             }
             Selected.Clear();
         }

@@ -9,41 +9,23 @@ namespace ToDoList.Client
 {
     class ToDoModel
     {
-        public HashSet<TaskModel> Tasks;
+        public HashSet<TaskModel> _tasks;
 
-        public event Action GotItems;
-
-        public void ReadData()
+        public async Task<HashSet<TaskModel>> GetTasks()
         {
-            var readThread = new Thread(() =>
-            {
-                Tasks = Synchronisator.GetTasks();
-                GotItems?.Invoke();
-                Thread.CurrentThread.Abort();
-            })
-            { IsBackground = true};
-
-            readThread.Start();
+            _tasks = await Synchronisator.GetTasksAsync();
+            return _tasks;
         }
 
-        public void AddItem(TaskModel task)
+        public async Task AddItemAsync(TaskModel task)
         {
-            SendItem(Synchronisator.Add, task);
+            await Synchronisator.Add(task);
         }
 
-        public void DeleteItem(TaskModel task)
+        public async Task DeleteItemAsync(TaskModel task)
         {
-            SendItem(Synchronisator.DeleteTask, task);
+            await Synchronisator.DeleteItemAsync(task);
         }
 
-        public void SendItem(Action<TaskModel> action, TaskModel task)
-        {
-            var sendThread = new Thread(() =>
-            {
-                action(task);
-                Thread.CurrentThread.Abort();
-            });
-            sendThread.Start();
-        }
     }
 }
