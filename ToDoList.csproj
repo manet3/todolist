@@ -77,7 +77,6 @@
     <Compile Include="Controls\LoadingVisualiser.xaml.cs">
       <DependentUpon>LoadingVisualiser.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ListMap.cs" />
     <Compile Include="Synchronisator.cs" />
     <Compile Include="Controls\TaskControl.xaml.cs">
       <DependentUpon>TaskControl.xaml</DependentUpon>

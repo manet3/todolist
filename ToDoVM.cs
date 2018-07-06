@@ -75,8 +75,7 @@ namespace ToDoList.Client
             model = new ToDoModel();
             TaskVM.TaskChanged += OnTaskChanged;
             Synchronisator.SynchChanged += SyncHandler;
-            model.GotItems += ToDoItemsGet;
-            model.ReadData();
+            ToDoItemsGetAsync();
         }
 
         private void SyncHandler(SyncState state)
@@ -86,14 +85,11 @@ namespace ToDoList.Client
             IsDownloading = state == SyncState.Started;
         }
 
-        private void ToDoItemsGet()
+        private async Task ToDoItemsGetAsync()
         {
-            if (model.Tasks == null)
-                return;
-
-            var items = model.Tasks.Select(x=> new TaskVM(x));   
-            
-            ToDo = new ObservableCollection<TaskVM>(items);
+            ToDo = new ObservableCollection<TaskVM>(
+                (await model.GetTasks())
+                .Select(x=> new TaskVM(x)));
         }
 
         private void OnTaskChanged(object sender, TaskEventArgs e)
@@ -101,14 +97,14 @@ namespace ToDoList.Client
             var task = (TaskVM)sender;
             //update changed properties
             if (e.IsCheckedChanged)
-                model.AddItem(task.Model);
+                model.AddItemAsync(task.Model);
 
             if (!e.IsSelectedChanged) return;
             if (task.IsSelected)
                 Selected.Add(task);
             else Selected.Remove(task);
-            OnPropertyChanged(nameof(ButtonRemoveVis));
 
+            OnPropertyChanged(nameof(ButtonRemoveVis));
         }
 
         private void ToDoAdd(object obj)
@@ -117,7 +113,7 @@ namespace ToDoList.Client
                 ? ToDo.Max(x => x.Model.Index) + 1
                 : 0;
             var newItem = new TaskVM(ToDoItem, false, itemIndex);
-            model.AddItem(newItem.Model);
+            model.AddItemAsync(newItem.Model);
             ToDo.Add(newItem);
         }
 
@@ -126,7 +122,7 @@ namespace ToDoList.Client
             foreach (var item in Selected)
             {
                 ToDo.Remove(item);
-                model.DeleteItem(item.Model);
+                model.DeleteItemAsync(item.Model);
             }
             Selected.Clear();
         }
