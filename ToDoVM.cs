@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using ToDoList.Client.Controls;
 
 namespace ToDoList.Client
 {
@@ -17,13 +18,15 @@ namespace ToDoList.Client
 
         #region generic_fields
         private ObservableCollection<TaskVM> _toDo;
-        private bool _isDownloading;
+        private LoadingState _loaderState;
         string _toDoItem;
+        string _errorMesage;
         #endregion
 
         #region ICommands
         public ICommand AddCommand { get; set; } 
         public ICommand RemoveCommand { get; set; }
+        public ICommand RestartCommand { get; set; }
         #endregion
 
         public string ToDoItem
@@ -37,13 +40,13 @@ namespace ToDoList.Client
             }
         }
 
-        public bool IsDownloading
+        public LoadingState LoaderState
         {
-            get => _isDownloading;
+            get => _loaderState;
             set
             {
-                _isDownloading = value;
-                OnPropertyChanged(nameof(IsDownloading));
+                _loaderState = value;
+                OnPropertyChanged(nameof(LoaderState));
             }
         }
 
@@ -63,6 +66,16 @@ namespace ToDoList.Client
             }
         }
 
+        public string ErrorMesage
+        {
+            get => _errorMesage;
+            set
+            {
+                _errorMesage = value;
+                OnPropertyChanged(nameof(ErrorMesage));
+            }
+        }
+
         private List<TaskVM> Selected = new List<TaskVM>();
 
         private ToDoModel model;
@@ -71,6 +84,7 @@ namespace ToDoList.Client
         {
             AddCommand = new Command(ToDoAdd, () => ToDoItem != null && !ToDoItem.Equals(""));
             RemoveCommand = new Command(ToDoRemove);
+            RestartCommand = new Command(OnRestart);
             ToDo = new ObservableCollection<TaskVM>();
             model = new ToDoModel();
             TaskVM.TaskChanged += OnTaskChanged;
@@ -78,11 +92,28 @@ namespace ToDoList.Client
             ToDoItemsGetAsync();
         }
 
+        private void OnRestart(object obj)
+        {
+            ToDoItemsGetAsync();
+        }
+
         private void SyncHandler(SyncState state)
         {
-            if (state == SyncState.Failed)
-                return;
-            IsDownloading = state == SyncState.Started;
+            //instead of direct convertation
+            switch(state)
+            {
+                case SyncState.Failed:
+                    ErrorMesage = "Failed to connect the server." +
+                        " Check your internet connection and try again.";
+                    LoaderState = LoadingState.Failed;
+                    break;
+                case SyncState.Started:
+                    ErrorMesage = "";
+                    LoaderState = LoadingState.Started;break;
+                default:
+                    ErrorMesage = "";
+                    LoaderState = LoadingState.None;break;
+            }
         }
 
         private async Task ToDoItemsGetAsync()

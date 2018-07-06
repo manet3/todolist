@@ -37,12 +37,11 @@
             <Setter Property="Width" Value="{Binding Height, RelativeSource={RelativeSource Self}}"/>
             <Setter Property="Fill" Value="DimGray"></Setter>
             <Setter Property="Canvas.Top" Value="2.5"></Setter>
-            <Setter Property="Visibility" Value="{Binding LoaderVis, 
-                RelativeSource={RelativeSource AncestorType=UserControl}}"></Setter>
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsActive, 
+                <!--No other way of binding can be used-->
+                <DataTrigger Binding="{Binding ActiveState, 
                     RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                     Value="true">
+                                     Value="Started">
                     <DataTrigger.EnterActions>
                         <BeginStoryboard Storyboard="{StaticResource ellipseMove}"/>
                     </DataTrigger.EnterActions>
@@ -50,13 +49,54 @@
             </Style.Triggers>
         </Style>
     </UserControl.Resources>
-    
-    <ItemsControl ItemsSource="{Binding Particles, 
+
+    <Grid>
+        <ItemsControl ItemsSource="{Binding Particles, 
         RelativeSource={RelativeSource AncestorType=UserControl}}">
-        <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-                <Canvas Width="200" Height="10"/>
-            </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-    </ItemsControl>
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Canvas Width="200" Height="10"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+        <Button Foreground="SlateGray" 
+                Command="{Binding RestartButtonPressed, 
+            RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                FontWeight="SemiBold" 
+                RenderTransformOrigin="0.5,0.5"
+                Height="22" Width="60"
+                HorizontalAlignment="Left"> Try again
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Border Name="btBorder" Background="White" 
+                            CornerRadius="3" 
+                            BorderBrush="DimGray"
+                            Visibility="Collapsed"
+                            BorderThickness="2">
+                        <ContentPresenter Margin="2,0,2,0"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="true">
+                            <Setter TargetName="btBorder" Property="Background" Value="LightGray"/>
+                        </Trigger>
+
+                        <Trigger Property="IsPressed" Value="true">
+                            <Setter TargetName="btBorder" Property="Background" Value="Gray"/>
+                            <Setter Property="RenderTransform">
+                                <Setter.Value>
+                                    <ScaleTransform ScaleX="0.9" ScaleY="0.9"></ScaleTransform>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+
+                        <DataTrigger Binding="{Binding ActiveState, 
+                    RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                     Value="Failed">
+                            <Setter TargetName="btBorder" Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+    </Grid>
 </UserControl>

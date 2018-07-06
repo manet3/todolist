@@ -74,6 +74,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Command.cs" />
+    <Compile Include="Controls\ErrorShowUp.xaml.cs">
+      <DependentUpon>ErrorShowUp.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\LoadingVisualiser.xaml.cs">
       <DependentUpon>LoadingVisualiser.xaml</DependentUpon>
     </Compile>
@@ -85,6 +88,10 @@
     <Compile Include="TaskVM.cs" />
     <Compile Include="ToDoModel.cs" />
     <Compile Include="ToDoVM.cs" />
+    <Page Include="Controls\ErrorShowUp.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\LoadingVisualiser.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

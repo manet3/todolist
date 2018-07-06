@@ -18,6 +18,13 @@ using System.Windows.Threading;
 
 namespace ToDoList.Client.Controls
 {
+
+    public enum LoadingState
+    {
+        None,
+        Started,
+        Failed
+    }
     /// <summary>
     /// Interaction logic for DownloadVis.xaml
     /// </summary>
@@ -26,42 +33,50 @@ namespace ToDoList.Client.Controls
         public event PropertyChangedEventHandler PropertyChanged;
 
 
-        public static DependencyProperty IsActiveProperty;
+        public static DependencyProperty ActiveStateProperty;
+
+        public static DependencyProperty RestartButtonPressedProperty;
 
 
-        public bool IsActive
+
+        public LoadingState ActiveState
         {
-            get => (bool)GetValue(IsActiveProperty);
-            set => SetValue(IsActiveProperty, value);
+            get => (LoadingState)GetValue(ActiveStateProperty);
+            set => SetValue(ActiveStateProperty, value);
+        }
+
+        public ICommand RestartButtonPressed
+        {
+            get => (ICommand)GetValue(RestartButtonPressedProperty);
+            set => SetValue(RestartButtonPressedProperty, value);
         }
 
         public ObservableCollection<Ellipse> Particles { get; set; }
-
-        public Visibility LoaderVis
-        {
-            get => IsActive
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-        }
 
         public int ParticlesNumber = 5;
 
         static LoadingVisualiser()
         {
-            IsActiveProperty = DependencyProperty.Register(
-                "IsActive", 
-                typeof(bool), 
+            ActiveStateProperty = DependencyProperty.Register(
+                "ActiveState", 
+                typeof(LoadingState), 
                 typeof(LoadingVisualiser),
-                new FrameworkPropertyMetadata(false, new PropertyChangedCallback(OnActiveChanged)));
+                new FrameworkPropertyMetadata(LoadingState.None, 
+                new PropertyChangedCallback(OnActiveChanged)));
+
+            RestartButtonPressedProperty = DependencyProperty.Register(
+                "RestartButtonPressed",
+                typeof(ICommand),
+                typeof(LoadingVisualiser));
         }
 
         private static void OnActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var obj = (LoadingVisualiser)d;
-            if ((bool)e.NewValue)
+            if ((LoadingState)e.NewValue == LoadingState.Started)
                 obj.AddParticles();
             else obj.RemoveParticles();
-            obj.OnPropertyChanged(nameof(LoaderVis));
+            obj.OnPropertyChanged(nameof(ActiveState));
         }
 
         public LoadingVisualiser()

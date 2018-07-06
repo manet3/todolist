@@ -52,16 +52,20 @@
           MouseDown="GridFocus" Name="mainGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="70"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition/>
+            <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5"/>
             <ColumnDefinition Width="4*"/>
             <ColumnDefinition/>
+            <ColumnDefinition Width="5"/>
         </Grid.ColumnDefinitions>
 
-        <TextBox Margin="10,5,5,5" Text="{Binding ToDoItem, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBox Grid.Column="1" Margin="10,5,5,5" Text="{Binding ToDoItem, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <Grid VerticalAlignment="Center" Grid.Column="1">
+        <Grid VerticalAlignment="Center" Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition/>
                 <RowDefinition/>
@@ -71,11 +75,15 @@
                     Command="{Binding RemoveCommand}" Visibility="{Binding ButtonRemoveVis}">-</Button>
         </Grid>
 
+        <controls:ErrorShowUp ErrorText ="{Binding ErrorMesage}"  
+                              Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1"/>
+
         <ItemsControl Name="todoList" 
                       Style="{StaticResource simpleItemsControl}" 
-                      Grid.Row="1" 
+                      Grid.Row="2" 
+                      Grid.Column="1"
                       Grid.ColumnSpan="2" 
-                      Margin="10,5,10,5" 
+                      Margin="0,5,0,5" 
                   ItemsSource="{Binding ToDo}" >
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -83,9 +91,11 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        
-        <controls:LoadingVisualiser Background="Transparent" IsActive="{Binding IsDownloading}" 
-                              Grid.Row="1" Grid.ColumnSpan="2" 
-                              VerticalAlignment="Top" Margin="0,10,0,0"/>
+
+        <controls:LoadingVisualiser Background="Transparent" 
+                                    ActiveState="{Binding LoaderState}" 
+                                    RestartButtonPressed="{Binding RestartCommand}"
+                                    Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" 
+                                    VerticalAlignment="Top" Margin="0,0,0,5"/>
     </Grid>
 </Window>
