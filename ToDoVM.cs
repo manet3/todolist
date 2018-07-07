@@ -12,7 +12,7 @@ using ToDoList.Client.Controls;
 
 namespace ToDoList.Client
 {
-    class ToDoVM: INotifyPropertyChanged
+    class ToDoVM : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -24,7 +24,7 @@ namespace ToDoList.Client
         #endregion
 
         #region ICommands
-        public ICommand AddCommand { get; set; } 
+        public ICommand AddCommand { get; set; }
         public ICommand RemoveCommand { get; set; }
         public ICommand RestartCommand { get; set; }
         #endregion
@@ -89,18 +89,22 @@ namespace ToDoList.Client
             model = new ToDoModel();
             TaskVM.TaskChanged += OnTaskChanged;
             Synchronisator.SynchChanged += SyncHandler;
-            ToDoItemsGetAsync();
+            GetItems();
         }
 
-        private void OnRestart(object obj)
+        private void OnRestart(object obj) => GetItems();
+
+        private void GetItems()
         {
-            ToDoItemsGetAsync();
+            var getTask = ToDoItemsGetAsync();
+            if (!getTask.IsCompleted)
+                Synchronisator.LoadingStartedInvoke();
         }
 
         private void SyncHandler(SyncState state)
         {
             //instead of direct convertation
-            switch(state)
+            switch (state)
             {
                 case SyncState.Failed:
                     ErrorMesage = "Failed to connect the server." +
@@ -109,10 +113,10 @@ namespace ToDoList.Client
                     break;
                 case SyncState.Started:
                     ErrorMesage = "";
-                    LoaderState = LoadingState.Started;break;
+                    LoaderState = LoadingState.Started; break;
                 default:
                     ErrorMesage = "";
-                    LoaderState = LoadingState.None;break;
+                    LoaderState = LoadingState.None; break;
             }
         }
 
@@ -120,7 +124,7 @@ namespace ToDoList.Client
         {
             ToDo = new ObservableCollection<TaskVM>(
                 (await model.GetTasks())
-                .Select(x=> new TaskVM(x)));
+                .Select(x => new TaskVM(x)));
         }
 
         private void OnTaskChanged(object sender, TaskEventArgs e)

@@ -5,11 +5,27 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ToDoList.Client.Controls"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300" Name="ErrorControl">
+             d:DesignHeight="300" Height="Auto" Width="Auto" d:DesignWidth="300" Name="ErrorControl">
     <Grid>
-        <Border Background="IndianRed" BorderBrush="DimGray" BorderThickness="1" 
-                CornerRadius="5" Margin="5,5,5,5">
-            <TextBlock Foreground="DarkRed"
+        <Grid Margin="5,5,5,5">
+            <Line X2="{Binding ActualWidth, ElementName=mainBorder}" 
+                  Margin="5,3,5,0"
+                  Stroke="IndianRed" StrokeThickness="3">
+                <Line.Style>
+                    <Style TargetType="Line">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding GotMessage, 
+                            RelativeSource={RelativeSource  AncestorType=UserControl}}" 
+                                     Value="false">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Line.Style>
+            </Line>
+            <Border Name="mainBorder" Background="IndianRed" BorderBrush="DimGray" BorderThickness="1" 
+                CornerRadius="5">
+                <TextBlock Foreground="DarkRed"
                        FontWeight="SemiBold"
                        FontSize="14"
                        TextWrapping="Wrap"
@@ -17,92 +33,61 @@
                        Text="{Binding ErrorText, 
                 RelativeSource={RelativeSource AncestorType=UserControl}}"
                        Name ="mesText"/>
-            <Border.Style>
-                <Style TargetType="Border">
-                    <Setter Property="Height" Value="0"/>
-                    <Style.Triggers>
-                        <MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsChecked, ElementName=crossButton}" 
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Height" Value="0"/>
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding GotMessage, 
+                            RelativeSource={RelativeSource  AncestorType=UserControl}}"
                                            Value="true"/>
-                                <Condition Binding="{Binding GotMessage, 
-                                    RelativeSource={RelativeSource  AncestorType=UserControl}}" 
-                                           Value="true"/>
-                            </MultiDataTrigger.Conditions>
-
-                            <MultiDataTrigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Duration="0:0:1" AccelerationRatio="0.5"
-                                                 DecelerationRatio="0.5"
-                                                 Storyboard.TargetProperty="Height"
-                                                 To="5"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </MultiDataTrigger.EnterActions>
-                            <MultiDataTrigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard Duration="0:0:1">
-                                        <DoubleAnimation Storyboard.TargetProperty="Height"
-                                                 AccelerationRatio="0.5"
-                                                 DecelerationRatio="0.5"
-                                                 To="55"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </MultiDataTrigger.ExitActions>
-                        </MultiDataTrigger>
-                        <DataTrigger Binding="{Binding GotMessage, 
-                            RelativeSource={RelativeSource  AncestorType=UserControl}}" 
-                                     Value="true">
-                            <DataTrigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Duration="0:0:1" AccelerationRatio="0.5"
+                                    <Condition Binding="{Binding IsChecked, ElementName=crossButton}" 
+                                           Value="false"/>
+                                </MultiDataTrigger.Conditions>
+                                <MultiDataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Duration="0:0:1" AccelerationRatio="0.5"
                                                  DecelerationRatio="0.5"
                                                  Storyboard.TargetProperty="Height"
                                                  From ="0" To="55"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </DataTrigger.EnterActions>
-                            <DataTrigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard Duration="0:0:1">
-                                        <DoubleAnimation Storyboard.TargetProperty="Height"
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </MultiDataTrigger.EnterActions>
+                                <MultiDataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard Duration="0:0:1">
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
                                                  AccelerationRatio="0.5"
                                                  DecelerationRatio="0.5"
                                                  To="0"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </DataTrigger.ExitActions>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Border.Style>
-        </Border>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </MultiDataTrigger.ExitActions>
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+            </Border>
+        </Grid>
+
         <ToggleButton Name="crossButton">
             <ToggleButton.Template>
                 <ControlTemplate TargetType="ToggleButton">
-                    <Grid HorizontalAlignment="Left" VerticalAlignment="Top" Height="18" Width="18">
-                        <Ellipse Name="crossBtEllipse" 
+                    <Grid Name="controlGrid" Visibility="Collapsed">
+                        <Grid HorizontalAlignment="Left" VerticalAlignment="Top" Height="18" Width="18">
+                            <Ellipse Name="crossBtEllipse" 
                                  RenderTransformOrigin="0.5,0.5"
                                  Fill="Red" Stroke="DimGray" StrokeThickness="1"/>
-                        <Path Margin="1,1,1,1" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                            <Path Margin="1,1,1,1" HorizontalAlignment="Center" VerticalAlignment="Center" 
                   Data="M 0 0 L 8 8 M 8 0 L 0 8" Stroke="White" StrokeThickness="3"/>
-                        <Grid.Style>
-                            <Style TargetType="Grid">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding GotMessage, 
-                            RelativeSource={RelativeSource  AncestorType=UserControl}}" 
-                                     Value="false">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Grid.Style>
+                        </Grid>
                     </Grid>
+
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter TargetName="crossBtEllipse" Property="StrokeThickness" Value="2"/>
+                            <Setter TargetName="crossBtEllipse" Property="StrokeThickness" Value="4"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="true">
                             <Setter TargetName="crossBtEllipse" Property="RenderTransform">
@@ -111,6 +96,12 @@
                                 </Setter.Value>
                             </Setter>
                         </Trigger>
+                        <DataTrigger Binding="{Binding GotMessage, 
+                            RelativeSource={RelativeSource  AncestorType=UserControl}}" 
+                                     Value="true">
+                            <Setter Property="IsChecked" Value="false"/>
+                            <Setter TargetName="controlGrid" Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </ToggleButton.Template>

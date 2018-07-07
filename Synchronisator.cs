@@ -42,8 +42,6 @@ namespace ToDoList.Client
         {
             var endpoint = requestType == HttpMethod.Put ? "change" : "add";
 
-            SynchChanged?.Invoke(SyncState.Started);
-
             var json = JsonConvert.SerializeObject(task);
             var req_message = new HttpRequestMessage(requestType, new Uri(http, endpoint))
             {
@@ -58,7 +56,6 @@ namespace ToDoList.Client
 
         public static async Task<HashSet<TaskModel>> GetTasksAsync()
         {
-            SynchChanged?.Invoke(SyncState.Started);
             using (Task<HttpResponseMessage> resp_message = Client.GetAsync(new Uri(http, "list")))
             {
                 var res = await resp_message;
@@ -80,12 +77,19 @@ namespace ToDoList.Client
 
         public static async Task DeleteItemAsync(TaskModel task)
         {
-            SynchChanged?.Invoke(SyncState.Started);
             using (Task<HttpResponseMessage> res_task = Client.DeleteAsync(new Uri(http, $"remove/{task.Id}")))
             {
                 var result = await res_task;
                 SynchChanged?.Invoke(ClassifyResponse(result));
             }
+        }
+
+        /// <summary>
+        /// Called from sync code if task is executed at once.
+        /// </summary>
+        public static void LoadingStartedInvoke()
+        {
+            SynchChanged?.Invoke(SyncState.Started);
         }
 
         private static SyncState ClassifyResponse(HttpResponseMessage message)

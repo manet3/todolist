@@ -7,7 +7,7 @@ using System.Windows.Input;
 
 namespace ToDoList.Client
 {
-    class Command:ICommand
+    class Command : ICommand
     {
         Action<object> _action;
         Func<bool> _callable;

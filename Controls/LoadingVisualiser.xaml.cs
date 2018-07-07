@@ -73,9 +73,14 @@ namespace ToDoList.Client.Controls
         private static void OnActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var obj = (LoadingVisualiser)d;
+
+            if ((LoadingState)e.NewValue == (LoadingState)e.OldValue)
+                return;
+
             if ((LoadingState)e.NewValue == LoadingState.Started)
                 obj.AddParticles();
             else obj.RemoveParticles();
+
             obj.OnPropertyChanged(nameof(ActiveState));
         }
 

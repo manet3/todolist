@@ -8,7 +8,7 @@ using System.Windows.Input;
 
 namespace ToDoList.Client
 {
-    public class TaskEventArgs:EventArgs
+    public class TaskEventArgs : EventArgs
     {
         public bool IsSelectedChanged;
         public bool IsCheckedChanged;
@@ -19,7 +19,7 @@ namespace ToDoList.Client
         }
     }
 
-    class TaskVM: INotifyPropertyChanged
+    class TaskVM : INotifyPropertyChanged
     {
         public TaskModel Model;
 
@@ -63,13 +63,13 @@ namespace ToDoList.Client
             Model = new TaskModel(content, state, index);
         }
 
-        public TaskVM(string content, bool state):this()
+        public TaskVM(string content, bool state) : this()
         {
             Content = content;
             Model = new TaskModel(content, state, 0);
         }
 
-        public TaskVM(TaskModel model):this()
+        public TaskVM(TaskModel model) : this()
         {
             Content = model.Name;
             Model = model;

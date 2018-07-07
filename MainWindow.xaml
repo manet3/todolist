@@ -54,7 +54,7 @@
             <RowDefinition Height="70"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
-            <RowDefinition Height="30"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="5"/>
@@ -96,6 +96,7 @@
                                     ActiveState="{Binding LoaderState}" 
                                     RestartButtonPressed="{Binding RestartCommand}"
                                     Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" 
-                                    VerticalAlignment="Top" Margin="0,0,0,5"/>
+                                    VerticalAlignment="Top" 
+                                    Margin="0,0,0,5"/>
     </Grid>
 </Window>
