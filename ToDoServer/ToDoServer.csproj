@@ -198,7 +198,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ToDoList.csproj">
+    <ProjectReference Include="..\ToDoClient\ToDoList.csproj">
       <Project>{5996d67a-6ac2-470d-a80c-ada8baacb451}</Project>
       <Name>ToDoList</Name>
     </ProjectReference>
