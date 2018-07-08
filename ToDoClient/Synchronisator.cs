@@ -32,13 +32,13 @@ namespace ToDoList.Client
             http = new Uri("http://localhost:51129/api/tasks/");
         }
 
-        public static async Task Add(IEnumerable<TaskModel> itemsToAdd) 
-            => await SendRequest(itemsToAdd, HttpMethod.Put);
+        public static async Task AddAsync(IEnumerable<TaskModel> itemsToAdd) 
+            => await SendRequestAsync(itemsToAdd, HttpMethod.Put);
 
-        public static async Task Add(TaskModel item) 
-            => await SendRequest(item, HttpMethod.Post);
+        public static async Task AddAsync(TaskModel item) 
+            => await SendRequestAsync(item, HttpMethod.Post);
 
-        private static async Task SendRequest<T>(T task, HttpMethod requestType)
+        private static async Task SendRequestAsync<T>(T task, HttpMethod requestType)
         {
             var endpoint = requestType == HttpMethod.Put ? "change" : "add";
 

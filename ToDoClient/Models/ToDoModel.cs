@@ -17,14 +17,32 @@ namespace ToDoList.Client
             return _tasks;
         }
 
-        public async Task AddItemAsync(TaskModel task)
+        public bool TryAddItem(TaskModel task)
         {
-            await Synchronisator.Add(task);
+            if (_tasks.Contains(task))
+                return false;
+
+            Update(Synchronisator.AddAsync, task);
+
+            return true;
         }
 
-        public async Task DeleteItemAsync(TaskModel task)
+
+        public bool TryDeleteItem(TaskModel task)
         {
-            await Synchronisator.DeleteItemAsync(task);
+            if (!_tasks.Contains(task))
+                return false;
+
+            Update(Synchronisator.DeleteItemAsync, task);
+
+            return true;
+        }
+
+        private void Update(Func<TaskModel, Task> sendActionAsync, TaskModel task)
+        {
+            //uploading the item
+            if (!sendActionAsync(task).IsCompleted)
+                Synchronisator.LoadingStartedInvoke();
         }
 
     }

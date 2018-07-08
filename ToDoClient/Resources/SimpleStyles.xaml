@@ -45,9 +45,11 @@
         </Setter>
     </Style>
     
-    <Style TargetType="TextBox" >
-        <Setter Property="FontSize" Value="20"></Setter>
-        <Setter Property="MaxHeight" Value="30"></Setter>
+    <Style TargetType="TextBox">
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="TextWrapping" Value="WrapWithOverflow"/>
+        <Setter Property="SpellCheck.IsEnabled" Value="True"/>
+        <Setter Property="AcceptsReturn" Value="True"/>
         <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -57,7 +59,7 @@
                             BorderThickness="3"
                             CornerRadius="3">
                         <Grid>
-                            <ScrollViewer x:Name="PART_ContentHost"></ScrollViewer>
+                            <ScrollViewer x:Name="PART_ContentHost"/>
                             <ContentPresenter/>
                         </Grid>
                     </Border>

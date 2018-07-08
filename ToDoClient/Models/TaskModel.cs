@@ -28,6 +28,11 @@ namespace ToDoList
             Index = index;
         }
 
+        public override bool Equals(object obj)
+        {
+            return GetHashCode() == obj.GetHashCode();
+        }
+
         public override int GetHashCode()
         {
             return Name.GetHashCode();

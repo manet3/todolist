@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -20,7 +21,7 @@ namespace ToDoList.Client
         private ObservableCollection<TaskVM> _toDo;
         private LoadingState _loaderState;
         string _toDoItem;
-        string _errorMesage;
+        ToDoNotification _notification;
         #endregion
 
         #region ICommands
@@ -29,13 +30,14 @@ namespace ToDoList.Client
         public ICommand RestartCommand { get; set; }
         #endregion
 
-        public string ToDoItem
+        #region updated fields
+        public string ToDoItemText
         {
             get => _toDoItem;
             set
             {
                 _toDoItem = value;
-                OnPropertyChanged(nameof(ToDoItem));
+                OnPropertyChanged(nameof(ToDoItemText));
                 ((Command)AddCommand).RaiseExecuteChanged();
             }
         }
@@ -59,34 +61,56 @@ namespace ToDoList.Client
 
         public ObservableCollection<TaskVM> ToDo
         {
-            get => _toDo; private set
+            get => _toDo;
+            private set
             {
                 _toDo = value;
                 OnPropertyChanged(nameof(ToDo));
             }
         }
 
-        public string ErrorMesage
+        public ToDoNotification Notification
         {
-            get => _errorMesage;
+            get => _notification;
             set
             {
-                _errorMesage = value;
-                OnPropertyChanged(nameof(ErrorMesage));
+                _notification = value;
+                OnPropertyChanged(nameof(Notification));
             }
         }
+        #endregion
 
         private List<TaskVM> Selected = new List<TaskVM>();
 
-        private ToDoModel model;
+        private ToDoModel _model;
+
+        public class ToDoNotification
+        {
+            public string Message { get; set; }
+
+            public ToDoNotification(string message)
+            {
+                Message = message;
+            }
+
+            public static ToDoNotification None = new ToDoNotification("");
+
+            public static ToDoNotification ServerError 
+                = new ToDoNotification("Failed to connect the server." +
+                        " Check your internet connection and try again.");
+
+            public static ToDoNotification ItemExists = new ToDoNotification("Doing the same " +
+                "task twice is unproductive.");
+
+        }
 
         public ToDoVM()
         {
-            AddCommand = new Command(ToDoAdd, () => ToDoItem != null && !ToDoItem.Equals(""));
+            AddCommand = new Command(ToDoAdd, () => ToDoItemText != null && !ToDoItemText.Equals(""));
             RemoveCommand = new Command(ToDoRemove);
             RestartCommand = new Command(OnRestart);
             ToDo = new ObservableCollection<TaskVM>();
-            model = new ToDoModel();
+            _model = new ToDoModel();
             TaskVM.TaskChanged += OnTaskChanged;
             Synchronisator.SynchChanged += SyncHandler;
             GetItems();
@@ -107,15 +131,14 @@ namespace ToDoList.Client
             switch (state)
             {
                 case SyncState.Failed:
-                    ErrorMesage = "Failed to connect the server." +
-                        " Check your internet connection and try again.";
+                    Notification = ToDoNotification.ServerError;
                     LoaderState = LoadingState.Failed;
                     break;
                 case SyncState.Started:
-                    ErrorMesage = "";
+                    Notification = ToDoNotification.None;
                     LoaderState = LoadingState.Started; break;
                 default:
-                    ErrorMesage = "";
+                    Notification = ToDoNotification.None;
                     LoaderState = LoadingState.None; break;
             }
         }
@@ -123,7 +146,7 @@ namespace ToDoList.Client
         private async Task ToDoItemsGetAsync()
         {
             ToDo = new ObservableCollection<TaskVM>(
-                (await model.GetTasks())
+                (await _model.GetTasks())
                 .Select(x => new TaskVM(x)));
         }
 
@@ -132,7 +155,7 @@ namespace ToDoList.Client
             var task = (TaskVM)sender;
             //update changed properties
             if (e.IsCheckedChanged)
-                model.AddItemAsync(task.Model);
+                _model.TryAddItem(task.Model);
 
             if (!e.IsSelectedChanged) return;
             if (task.IsSelected)
@@ -147,9 +170,14 @@ namespace ToDoList.Client
             var itemIndex = ToDo.Count != 0
                 ? ToDo.Max(x => x.Model.Index) + 1
                 : 0;
-            var newItem = new TaskVM(ToDoItem, false, itemIndex);
-            model.AddItemAsync(newItem.Model);
-            ToDo.Add(newItem);
+            var newItem = new TaskVM(ToDoItemText, false, itemIndex);
+            if (_model.TryAddItem(newItem.Model))
+            {
+                ToDo.Add(newItem);
+                ToDoItemText = "";
+            }
+            else ShowTemporalMessageAsync(ToDoNotification.ItemExists);
+                
         }
 
         private void ToDoRemove(object obj)
@@ -157,9 +185,16 @@ namespace ToDoList.Client
             foreach (var item in Selected)
             {
                 ToDo.Remove(item);
-                model.DeleteItemAsync(item.Model);
+                _model.TryDeleteItem(item.Model);
             }
             Selected.Clear();
+        }
+
+        private async Task ShowTemporalMessageAsync(ToDoNotification message)
+        {
+            Notification = message;
+            await Task.Delay(new TimeSpan(0, 0, 5));
+            Notification = ToDoNotification.None;
         }
 
         public void OnPropertyChanged(string property)
