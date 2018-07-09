@@ -39,5 +39,12 @@ namespace ToDoList.Client
         {
             ((UIElement)sender).Focus();
         }
+
+
+        //make an attached property
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            ((ToDoVM)((Window)sender).DataContext).ClosingCommand.Execute(this);
+        }
     }
 }

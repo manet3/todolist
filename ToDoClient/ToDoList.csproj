@@ -80,8 +80,10 @@
     <Compile Include="Controls\LoadingVisualiser.xaml.cs">
       <DependentUpon>LoadingVisualiser.xaml</DependentUpon>
     </Compile>
+    <Compile Include="JsonManager.cs" />
     <Compile Include="Models\TaskModel.cs" />
     <Compile Include="Models\ToDoModel.cs" />
+    <Compile Include="ProgressSaver.cs" />
     <Compile Include="Synchronisator.cs" />
     <Compile Include="Controls\TaskControl.xaml.cs">
       <DependentUpon>TaskControl.xaml</DependentUpon>

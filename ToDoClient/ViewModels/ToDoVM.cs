@@ -28,6 +28,7 @@ namespace ToDoList.Client
         public ICommand AddCommand { get; set; }
         public ICommand RemoveCommand { get; set; }
         public ICommand RestartCommand { get; set; }
+        public ICommand ClosingCommand { get; set; }
         #endregion
 
         #region updated fields
@@ -109,11 +110,17 @@ namespace ToDoList.Client
             AddCommand = new Command(ToDoAdd, () => ToDoItemText != null && !ToDoItemText.Equals(""));
             RemoveCommand = new Command(ToDoRemove);
             RestartCommand = new Command(OnRestart);
+            ClosingCommand = new Command(OnFinishing);
             ToDo = new ObservableCollection<TaskVM>();
             _model = new ToDoModel();
             TaskVM.TaskChanged += OnTaskChanged;
             Synchronisator.SynchChanged += SyncHandler;
             GetItems();
+        }
+
+        private void OnFinishing(object obj)
+        {
+            _model.CheckSaveProgress();
         }
 
         private void OnRestart(object obj) => GetItems();

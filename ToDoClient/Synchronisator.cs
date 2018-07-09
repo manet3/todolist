@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http;
-using Newtonsoft.Json;
-using System.IO;
-using System.Net.Http.Headers;
 
 namespace ToDoList.Client
 {
@@ -26,6 +22,8 @@ namespace ToDoList.Client
 
         private static Uri http;
 
+        public static bool IsSynchronized;
+
         static Synchronisator()
         {
             Client = new HttpClient();
@@ -42,7 +40,7 @@ namespace ToDoList.Client
         {
             var endpoint = requestType == HttpMethod.Put ? "change" : "add";
 
-            var json = JsonConvert.SerializeObject(task);
+            var json = JsonManager.MakeJson(task);
             var req_message = new HttpRequestMessage(requestType, new Uri(http, endpoint))
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json")
@@ -68,7 +66,7 @@ namespace ToDoList.Client
                     SynchChanged?.Invoke(res_type);
 
                     if (res_type == SyncState.Complete)
-                        return JsonConvert.DeserializeObject<HashSet<TaskModel>>(await jsonTask);
+                        return JsonManager.FromJson<HashSet<TaskModel>>(await jsonTask);
                     else
                         return new HashSet<TaskModel>();
                 }
@@ -93,9 +91,13 @@ namespace ToDoList.Client
         }
 
         private static SyncState ClassifyResponse(HttpResponseMessage message)
-            => message.StatusCode == HttpStatusCode.OK 
-            || message.StatusCode == HttpStatusCode.NoContent
-            ? SyncState.Complete
-            : SyncState.Failed;
+        {
+            var res_type = message.StatusCode == HttpStatusCode.OK
+                || message.StatusCode == HttpStatusCode.NoContent
+                ? SyncState.Complete
+                : SyncState.Failed;
+            IsSynchronized = res_type != SyncState.Failed;
+            return res_type;
+        }
     }
 }

@@ -14,6 +14,10 @@ namespace ToDoList.Client
         public async Task<HashSet<TaskModel>> GetTasks()
         {
             _tasks = await Synchronisator.GetTasksAsync();
+
+            if (!Synchronisator.IsSynchronized)
+                _tasks = ProgressSaver<HashSet<TaskModel>>.TryGetSessions().Last();
+
             return _tasks;
         }
 
@@ -21,6 +25,8 @@ namespace ToDoList.Client
         {
             if (_tasks.Contains(task))
                 return false;
+
+            _tasks.Add(task);
 
             Update(Synchronisator.AddAsync, task);
 
@@ -33,9 +39,17 @@ namespace ToDoList.Client
             if (!_tasks.Contains(task))
                 return false;
 
+            _tasks.Remove(task);
+
             Update(Synchronisator.DeleteItemAsync, task);
 
             return true;
+        }
+
+        public void CheckSaveProgress()
+        {
+            if (!Synchronisator.IsSynchronized)
+                ProgressSaver<HashSet<TaskModel>>.SaveCurrentSession(_tasks);
         }
 
         private void Update(Func<TaskModel, Task> sendActionAsync, TaskModel task)
