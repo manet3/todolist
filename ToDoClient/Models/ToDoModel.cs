@@ -9,24 +9,53 @@ namespace ToDoList.Client
 {
     class ToDoModel
     {
-        public HashSet<TaskModel> _tasks;
+        public HashSet<TaskModel> ItamsData;
 
-        public async Task<HashSet<TaskModel>> GetTasks()
+        private Action _unfinishedAction;
+
+        public event Action GotItems;
+
+        public ToDoModel()
         {
-            _tasks = await Synchronisator.GetTasksAsync();
-
-            if (!Synchronisator.IsSynchronized)
-                _tasks = ProgressSaver<HashSet<TaskModel>>.TryGetSessions().Last();
-
-            return _tasks;
+            Synchronisator.SynchChanged += ActFinishedCheck;
         }
+
+        private void ActFinishedCheck(SyncState state)
+        {
+            if (state != SyncState.Failed)
+                _unfinishedAction = null;
+        }
+
+        public async Task GetItems()
+        {
+            _unfinishedAction = () =>  GetItems();
+
+            var itemTask = Synchronisator.GetTasksAsync();
+
+            if (!itemTask.IsCompleted)
+            {
+                Synchronisator.LoadingStartedInvoke();
+                ItamsData = await itemTask;
+            }
+            else ItamsData = itemTask.Result;
+
+
+            if (!Synchronisator.IsSyncSuccessful)
+            {
+                ItamsData = ProgressSaver<HashSet<TaskModel>>.TryGetSessions().Last();
+                GotItems();
+            }
+
+        }
+
+        public void Retry() => _unfinishedAction();
 
         public bool TryAddItem(TaskModel task)
         {
-            if (_tasks.Contains(task))
+            if (ItamsData.Contains(task))
                 return false;
 
-            _tasks.Add(task);
+            ItamsData.Add(task);
 
             Update(Synchronisator.AddAsync, task);
 
@@ -36,10 +65,10 @@ namespace ToDoList.Client
 
         public bool TryDeleteItem(TaskModel task)
         {
-            if (!_tasks.Contains(task))
+            if (!ItamsData.Contains(task))
                 return false;
 
-            _tasks.Remove(task);
+            ItamsData.Remove(task);
 
             Update(Synchronisator.DeleteItemAsync, task);
 
@@ -48,14 +77,24 @@ namespace ToDoList.Client
 
         public void CheckSaveProgress()
         {
-            if (!Synchronisator.IsSynchronized)
-                ProgressSaver<HashSet<TaskModel>>.SaveCurrentSession(_tasks);
+            if (!Synchronisator.IsSyncSuccessful)
+                ProgressSaver<HashSet<TaskModel>>.SaveCurrentSession(ItamsData);
         }
 
         private void Update(Func<TaskModel, Task> sendActionAsync, TaskModel task)
         {
+            //will try to update by scedule
+            _unfinishedAction = UpdateAll;
+            if (!Synchronisator.IsSyncSuccessful) return;
+
             //uploading the item
             if (!sendActionAsync(task).IsCompleted)
+                Synchronisator.LoadingStartedInvoke();
+        }
+
+        private void UpdateAll()
+        {
+            if (!Synchronisator.AddAsync(ItamsData).IsCompleted)
                 Synchronisator.LoadingStartedInvoke();
         }
 

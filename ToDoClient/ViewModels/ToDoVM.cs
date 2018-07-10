@@ -107,15 +107,17 @@ namespace ToDoList.Client
 
         public ToDoVM()
         {
+            #region Commands
             AddCommand = new Command(ToDoAdd, () => ToDoItemText != null && !ToDoItemText.Equals(""));
             RemoveCommand = new Command(ToDoRemove);
             RestartCommand = new Command(OnRestart);
             ClosingCommand = new Command(OnFinishing);
+            #endregion
             ToDo = new ObservableCollection<TaskVM>();
             _model = new ToDoModel();
             TaskVM.TaskChanged += OnTaskChanged;
             Synchronisator.SynchChanged += SyncHandler;
-            GetItems();
+            GetList();
         }
 
         private void OnFinishing(object obj)
@@ -123,14 +125,13 @@ namespace ToDoList.Client
             _model.CheckSaveProgress();
         }
 
-        private void OnRestart(object obj) => GetItems();
-
-        private void GetItems()
+        private void GetList()
         {
-            var getTask = ToDoItemsGetAsync();
-            if (!getTask.IsCompleted)
-                Synchronisator.LoadingStartedInvoke();
+            _model.GotItems += TranslateItems;
+            _model.GetItems();
         }
+
+        private void OnRestart(object obj) => _model.Retry();
 
         private void SyncHandler(SyncState state)
         {
@@ -150,11 +151,10 @@ namespace ToDoList.Client
             }
         }
 
-        private async Task ToDoItemsGetAsync()
+        private void TranslateItems()
         {
             ToDo = new ObservableCollection<TaskVM>(
-                (await _model.GetTasks())
-                .Select(x => new TaskVM(x)));
+                _model.ItamsData.Select(x => new TaskVM(x)));
         }
 
         private void OnTaskChanged(object sender, TaskEventArgs e)
