@@ -106,7 +106,7 @@ namespace ToDoList.Client
 
         public ToDoVM()
         {
-            AddCommand = new Command(ToDoAdd, () => ToDoItemText != null && !ToDoItemText.Equals(""));
+            AddCommand = new Command(ToDoAdd, () => ToDoItemText != null && !string.IsNullOrWhiteSpace(ToDoItemText));
             RemoveCommand = new Command(ToDoRemove);
             RestartCommand = new Command(OnRestart);
             ToDo = new ObservableCollection<TaskVM>();
