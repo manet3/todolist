@@ -108,7 +108,7 @@ namespace ToDoList.Client
         public ToDoVM()
         {
             #region Commands
-            AddCommand = new Command(ToDoAdd, () => ToDoItemText != null && !ToDoItemText.Equals(""));
+            AddCommand = new Command(ToDoAdd, () => ToDoItemText != null && !string.IsNullOrWhiteSpace(ToDoItemText));
             RemoveCommand = new Command(ToDoRemove);
             RestartCommand = new Command(OnRestart);
             ClosingCommand = new Command(OnFinishing);

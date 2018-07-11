@@ -23,7 +23,8 @@
         </Border.Style>
         <StackPanel Orientation="Horizontal">
             <CheckBox Name="TaskCheck"
-                  VerticalAlignment="Center"
+                  VerticalAlignment="Top"
+                  Margin="0,5,0,0"
                   IsChecked="{Binding IsDone, Mode=TwoWay}" >
                 <CheckBox.Template>
                     <ControlTemplate TargetType="CheckBox">
