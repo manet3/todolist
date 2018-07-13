@@ -1,0 +1,72 @@
+﻿<UserControl x:Class="ToDoList.Client.Controls.TaskControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ToDoList"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300" DataContext="{Binding}" 
+             MouseDoubleClick="UserControl_MouseDoubleClick"
+             MouseDown="UserControl_MouseDown">
+
+    <Border CornerRadius="3" BorderThickness="2">
+        <Border.Style>
+            <Style TargetType="Border">
+                <Setter Property="Background" Value="White"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                        <Setter Property="BorderBrush" Value="DimGray"/>
+                        <Setter Property="Background" Value="LightGray"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
+        <StackPanel Orientation="Horizontal">
+            <CheckBox Name="TaskCheck"
+                  VerticalAlignment="Top"
+                  Margin="0,5,0,0"
+                  IsChecked="{Binding IsDone, Mode=TwoWay}" >
+                <CheckBox.Template>
+                    <ControlTemplate TargetType="CheckBox">
+                        <BulletDecorator Background="Transparent">
+                            <BulletDecorator.Bullet>
+                                <Border Width="15" Height="15" 
+                                    BorderThickness="2" BorderBrush="Gray" 
+                                    Padding="1,1,1,1">
+                                    <Path Name="Mark" 
+                                          Visibility="Collapsed"
+                                          Width="10" Height="10" 
+                                          Stroke="Black" StrokeThickness="1" 
+                                          Data="M 2 5 L 5 9 L 9 1"/>
+                                </Border>
+                            </BulletDecorator.Bullet>
+                        </BulletDecorator>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="Mark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </CheckBox.Template>
+            </CheckBox>
+            <Grid Margin="5,0,0,0" VerticalAlignment="Center">
+                <TextBlock Name="TextContent" 
+                       VerticalAlignment="Center"
+                       Text="{Binding Content}"     
+                       TextWrapping="WrapWithOverflow"
+                       FontSize="15" 
+                       FontWeight="Medium">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDone}" Value="true">
+                                    <Setter Property="TextBlock.TextDecorations" Value="Strikethrough"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+        </StackPanel>
+    </Border>
+</UserControl>

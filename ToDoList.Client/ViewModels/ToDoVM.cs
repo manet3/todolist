@@ -1,0 +1,161 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+
+namespace ToDoList.Client
+{
+    class ToDoVM : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #region generic_fields
+        private ObservableCollection<TaskVM> _toDo;
+        string _toDoItem;
+        ToDoNotification _notification;
+        #endregion
+
+        #region ICommands
+        public ICommand AddCommand { get; set; }
+        public ICommand RemoveCommand { get; set; }
+        #endregion
+
+        #region updated fields
+        public string ToDoItemText
+        {
+            get => _toDoItem;
+            set
+            {
+                _toDoItem = value;
+                OnPropertyChanged(nameof(ToDoItemText));
+                ((Command)AddCommand).RaiseExecuteChanged();
+            }
+        }
+
+        public Visibility ButtonRemoveVis
+        {
+            get => Selected.Count == 0
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        public ObservableCollection<TaskVM> ToDo
+        {
+            get => _toDo;
+            private set
+            {
+                _toDo = value;
+                OnPropertyChanged(nameof(ToDo));
+            }
+        }
+
+        public ToDoNotification Notification
+        {
+            get => _notification;
+            set
+            {
+                _notification = value;
+                OnPropertyChanged(nameof(Notification));
+            }
+        }
+
+        #endregion
+
+        private List<TaskVM> Selected = new List<TaskVM>();
+
+        private ToDoModel _model;
+
+        public class ToDoNotification
+        {
+            public string Message { get; set; }
+
+            public ToDoNotification(string message)
+            {
+                Message = message;
+            }
+
+            public static ToDoNotification None = new ToDoNotification("");
+
+            public static ToDoNotification ItemExists = new ToDoNotification("Doing the same " +
+                "task twice is unproductive.");
+
+        }
+
+        public ToDoVM()
+        {
+            #region Commands
+            AddCommand = new Command(ToDoAdd, 
+                () => ToDoItemText != null 
+                && !string.IsNullOrWhiteSpace(ToDoItemText));
+            RemoveCommand = new Command(ToDoRemove);
+            #endregion
+            ToDo = new ObservableCollection<TaskVM>();
+            _model = new ToDoModel();
+            TaskVM.TaskChanged += OnTaskChanged;
+        }
+
+        private void TranslateItems()
+        {
+            ToDo = new ObservableCollection<TaskVM>(
+                _model.ItemsData.Select(x => new TaskVM(x)));
+        }
+
+        private void OnTaskChanged(object sender, TaskEventArgs e)
+        {
+            var task = (TaskVM)sender;
+            //update changed properties
+            if (e.IsCheckedChanged)
+                _model.TryAddItem(task.Model);
+
+            if (!e.IsSelectedChanged) return;
+            if (task.IsSelected)
+                Selected.Add(task);
+            else Selected.Remove(task);
+
+            OnPropertyChanged(nameof(ButtonRemoveVis));
+        }
+
+        private void ToDoAdd(object obj)
+        {
+            var itemIndex = ToDo.Count != 0
+                ? ToDo.Max(x => x.Model.Index) + 1
+                : 0;
+            var newItem = new TaskVM(ToDoItemText.Trim(), false, itemIndex);
+            if (_model.TryAddItem(newItem.Model))
+            {
+                ToDo.Add(newItem);
+                ToDoItemText = "";
+            }
+
+            else ShowTemporalMessageAsync(ToDoNotification.ItemExists);
+                
+        }
+
+        private void ToDoRemove(object obj)
+        {
+            foreach (var item in Selected)
+            {
+                ToDo.Remove(item);
+                _model.TryDeleteItem(item.Model);
+            }
+            Selected.Clear();
+            OnPropertyChanged(nameof(ButtonRemoveVis));
+        }
+
+        private async Task ShowTemporalMessageAsync(ToDoNotification message)
+        {
+            Notification = message;
+            await Task.Delay(new TimeSpan(0, 0, 5));
+            Notification = ToDoNotification.None;
+        }
+
+        public void OnPropertyChanged(string property)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+        }
+    }
+}

@@ -24,5 +24,20 @@ namespace ToDoList.Client
         {
             InitializeComponent();
         }
+
+        private void btCloseClick(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            DragMove();
+        }
+
+        private void GridFocus(object sender, MouseButtonEventArgs e)
+        {
+            ((UIElement)sender).Focus();
+        }
     }
 }

@@ -1,0 +1,95 @@
+﻿<Window x:Class="ToDoList.Client.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ToDoList.Client"
+        xmlns:controls="clr-namespace:ToDoList.Client.Controls"
+        mc:Ignorable="d"
+        Title="ToDo" MinHeight="200" MinWidth="150" Height="400" 
+        Width="300">
+    <Window.DataContext>
+        <local:ToDoVM/>
+    </Window.DataContext>
+    <Window.Style>
+        <Style TargetType="{x:Type Window}">
+            <Setter Property="WindowStyle" Value="None"/>
+            <Setter Property="AllowsTransparency" Value="True"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Template" >
+                <Setter.Value>
+                    <ControlTemplate TargetType="Window">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30"/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <Border BorderBrush="Gray" BorderThickness="3" 
+                                    Grid.RowSpan="2" CornerRadius="5" Background="White">
+                                <DockPanel >
+                                    <Border DockPanel.Dock="Top" CornerRadius="5" 
+                                            MouseLeftButtonDown="Border_MouseLeftButtonDown" 
+                                            Background="White">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Name="btClose" Style="{StaticResource closeButton}" Click="btCloseClick"></Button>
+                                        </StackPanel>
+                                    </Border>
+                                    <Line DockPanel.Dock="Top" Fill="Transparent" X1="0" Y1="0" Y2="0" X2="{TemplateBinding Property=Width}" 
+                                          Stroke="Gray" StrokeThickness="5"></Line>
+                                    <AdornerDecorator DockPanel.Dock="Bottom">
+                                        <ContentPresenter/>
+                                    </AdornerDecorator>
+                                </DockPanel>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Style>
+    <Grid Background="White" 
+          Focusable="True" 
+          MouseDown="GridFocus" Name="mainGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="70"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="5"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBox Grid.Column="1" Margin="10,5,5,5" 
+                 Text="{Binding ToDoItemText, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <Grid VerticalAlignment="Center" Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Button Style="{StaticResource add-removeButton}" Command="{Binding AddCommand}" IsEnabled="True" >+</Button>
+            <Button Style="{StaticResource add-removeButton}" Grid.Row="1" 
+                    Command="{Binding RemoveCommand}" Visibility="{Binding ButtonRemoveVis}">-</Button>
+        </Grid>
+
+        <controls:ErrorShowUp ErrorText ="{Binding Notification.Message}"  
+                              Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1"/>
+
+        <ItemsControl Name="todoList" 
+                      Style="{StaticResource simpleItemsControl}" 
+                      Grid.Row="2" 
+                      Grid.Column="1"
+                      Grid.ColumnSpan="2" 
+                      Margin="0,5,0,5" 
+                  ItemsSource="{Binding ToDo}" >
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <controls:TaskControl/>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</Window>
