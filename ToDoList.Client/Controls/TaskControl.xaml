@@ -21,7 +21,11 @@
                 </Style.Triggers>
             </Style>
         </Border.Style>
-        <StackPanel Orientation="Horizontal">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="15"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
             <CheckBox Name="TaskCheck"
                   VerticalAlignment="Top"
                   Margin="0,5,0,0"
@@ -49,12 +53,14 @@
                     </ControlTemplate>
                 </CheckBox.Template>
             </CheckBox>
-            <Grid Margin="5,0,0,0" VerticalAlignment="Center">
+            <Grid Grid.Column="1" Margin="5,0,0,0" VerticalAlignment="Center">
                 <TextBlock Name="TextContent" 
                        VerticalAlignment="Center"
-                       Text="{Binding Content}"     
-                       TextWrapping="WrapWithOverflow"
+                       Text="{Binding Content}"   
+                       Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}}"
+                       TextWrapping="Wrap"
                        FontSize="15" 
+                       Margin="0,0,5,0" 
                        FontWeight="Medium">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
@@ -67,6 +73,6 @@
                     </TextBlock.Style>
                 </TextBlock>
             </Grid>
-        </StackPanel>
+        </Grid>
     </Border>
 </UserControl>

@@ -87,7 +87,10 @@
                   ItemsSource="{Binding ToDo}" >
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <controls:TaskControl/>
+                    <Grid Width="{Binding ActualWidth, 
+                        RelativeSource={RelativeSource AncestorType=ItemsControl}}">
+                        <controls:TaskControl Margin="0,0,20,0"/>
+                    </Grid>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
