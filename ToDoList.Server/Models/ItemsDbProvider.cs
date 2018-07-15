@@ -1,22 +1,18 @@
 ﻿using ServiceStack;
 using ServiceStack.OrmLite;
-using ServiceStack.OrmLite.Sqlite;
-using ServiceStack.OrmLite;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Web;
+using ToDoList.Shared;
 
 namespace ToDoList.Server.Models
 {
-    public class ItemsDbProvider
+    public static class ItemsDbProvider
     {
         private static readonly string _dbFilePath;
 
         private static readonly OrmLiteConnectionFactory _dbFactory;
-
-        private static IDbConnection dbOpen;
 
         static ItemsDbProvider()
         {
@@ -24,70 +20,68 @@ namespace ToDoList.Server.Models
             _dbFactory = new OrmLiteConnectionFactory(_dbFilePath, SqliteDialect.Provider);
         }
 
-        public static void UsingDb(Func<bool> exec)
+        public static bool AddToDB(ToDoItem item)
         {
-            using (dbOpen = _dbFactory.Open())
+            using (var dbOpen = _dbFactory.Open())
             {
-                exec();
-            }
-        }
-
-        public static bool AddToDB(object item)
-        {
-            dbOpen.CreateTableIfNotExists();
-            if (!UpdateDB(item))
-                dbOpen.Insert(item);
-            return true;
-        }
-
-        public static bool GetDBItems(ref IEnumerable items)
-        {
-            try
-            {
-                items = dbOpen
-                    .Select()
-                    .ToList()
-                    .OrderBy(x => x.Index);
+                dbOpen.CreateTableIfNotExists();
+                if (!UpdateDB(item, dbOpen))
+                    dbOpen.Insert(item);
                 return true;
             }
-            catch (System.Data.SQLite.SQLiteException)
+        }
+
+        public static bool GetDBItems(out IEnumerable<ToDoItem> items)
+        {
+            using (var dbOpen = _dbFactory.Open())
             {
-                items = new object[0];
-                return false;
+                try
+                {
+                    items = dbOpen
+                        .Select<ToDoItem>()
+                        .ToList()
+                        //because items are got in opposite order
+                        .OrderByDescending(x => x.Index);
+                    return true;
+                }
+                catch (System.Data.SQLite.SQLiteException)
+                {
+                    items = new ToDoItem[0];
+                    return false;
+                }
             }
         }
 
-        public static bool GetDbItem(int id, ref object item)
+        private static bool UpdateDB(ToDoItem task, IDbConnection dbOpen)
         {
-            item = dbOpen.Single(x => x.Id == id);
-            return dbOpen.Exists(new { Id = id });
-
-        }
-
-        public static bool UpdateDB(object task)
-        {
-            var itemFound = dbOpen.Exists(new { Id = task.Id });
+            var itemFound = dbOpen.Exists<ToDoItem>(new { Name = task.Name });
             if (itemFound)
                 dbOpen.Update(task);
             return itemFound;
         }
 
-        public static bool UpdateDB(IEnumerable<object> item_set)
+        public static bool UpdateDB(IEnumerable<ToDoItem> item_set)
         {
-            if (dbOpen.TableExists())
-                dbOpen.DeleteAll();
-            else dbOpen.CreateTable();
+            using (var dbOpen = _dbFactory.Open())
+            {
+                if (dbOpen.TableExists<ToDoItem>())
+                    dbOpen.DeleteAll<ToDoItem>();
+                else dbOpen.CreateTable<ToDoItem>();
 
-            foreach (var item in item_set)
-                if (!UpdateDB(item))
-                    dbOpen.Insert(item);
-            return true;
+                foreach (var item in item_set)
+                    if (!UpdateDB(item, dbOpen))
+                        dbOpen.Insert(item);
+                return true;
+            }
         }
 
-        public static bool RemoveDBItem(int id)
+        public static bool RemoveDBItem(string name)
         {
-            dbOpen.DeleteById(id);
-            return true;
+            using (var dbOpen = _dbFactory.Open())
+            {
+                dbOpen.Delete<ToDoItem>((x) => x.Name == name);
+                return true;
+            }
         }
     }
 }
