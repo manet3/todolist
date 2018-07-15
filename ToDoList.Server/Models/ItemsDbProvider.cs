@@ -22,6 +22,7 @@ namespace ToDoList.Server.Models
 
         public static bool AddToDB(ToDoItem item)
         {
+            if (item == null) return false;
             using (var dbOpen = _dbFactory.Open())
             {
                 dbOpen.CreateTableIfNotExists();
@@ -62,6 +63,7 @@ namespace ToDoList.Server.Models
 
         public static bool UpdateDB(IEnumerable<ToDoItem> item_set)
         {
+            if (item_set == null) return false;
             using (var dbOpen = _dbFactory.Open())
             {
                 if (dbOpen.TableExists<ToDoItem>())
