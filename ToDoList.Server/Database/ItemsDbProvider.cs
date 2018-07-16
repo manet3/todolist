@@ -1,10 +1,9 @@
 ﻿using ServiceStack;
 using ServiceStack.OrmLite;
-using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using ToDoList.Shared;
+using ToDoList.Server.Database.Models;
 
 namespace ToDoList.Server.Database
 {
@@ -20,68 +19,68 @@ namespace ToDoList.Server.Database
             _dbFactory = new OrmLiteConnectionFactory(_dbFilePath, SqliteDialect.Provider);
         }
 
-        public static bool AddToDB(ToDoItem item)
+        public static void AddToDB(ItemDbModel item)
         {
-            if (item == null) return false;
             using (var dbOpen = _dbFactory.Open())
             {
-                dbOpen.CreateTableIfNotExists();
-                if (!UpdateDB(item, dbOpen))
+                dbOpen.CreateTableIfNotExists<ItemDbModel>();
+                if (!TryUpdateDBItem(item, dbOpen))
                     dbOpen.Insert(item);
-                return true;
+                return;
             }
         }
 
-        public static bool GetDBItems(out IEnumerable<ToDoItem> items)
+        public static bool TryGetDBItems(out IEnumerable<ItemDbModel> items)
         {
             using (var dbOpen = _dbFactory.Open())
             {
                 try
                 {
                     items = dbOpen
-                        .Select<ToDoItem>()
-                        .ToList()
-                        //because items are got in opposite order
-                        .OrderByDescending(x => x.Index);
+                        .Select<ItemDbModel>()
+                        .ToList();
+                    //because items are got in opposite order
+                    items.Reverse();
                     return true;
                 }
                 catch (System.Data.SQLite.SQLiteException)
                 {
-                    items = new ToDoItem[0];
+                    items = new ItemDbModel[0];
                     return false;
                 }
             }
         }
 
-        private static bool UpdateDB(ToDoItem task, IDbConnection dbOpen)
+        public static bool TryUpdateDBItem(ItemDbModel task, IDbConnection dbOpen)
         {
-            var itemFound = dbOpen.Exists<ToDoItem>(new { Name = task.Name });
+            var itemFound = dbOpen.Exists<ItemDbModel>(new { Name = task.Name });
             if (itemFound)
                 dbOpen.Update(task);
             return itemFound;
         }
 
-        public static bool UpdateDB(IEnumerable<ToDoItem> item_set)
+        public static void UpdateDB(IEnumerable<ItemDbModel> item_set)
         {
-            if (item_set == null) return false;
             using (var dbOpen = _dbFactory.Open())
             {
-                if (dbOpen.TableExists<ToDoItem>())
-                    dbOpen.DeleteAll<ToDoItem>();
-                else dbOpen.CreateTable<ToDoItem>();
+                if (dbOpen.TableExists<ItemDbModel>())
+                    dbOpen.DeleteAll<ItemDbModel>();
+                else dbOpen.CreateTable<ItemDbModel>();
 
                 foreach (var item in item_set)
-                    if (!UpdateDB(item, dbOpen))
+                    if (!TryUpdateDBItem(item, dbOpen))
                         dbOpen.Insert(item);
-                return true;
+                return;
             }
         }
 
-        public static bool RemoveDBItem(string name)
+        public static bool TryRemoveDBItem(string name)
         {
             using (var dbOpen = _dbFactory.Open())
             {
-                dbOpen.Delete<ToDoItem>((x) => x.Name == name);
+                if (!dbOpen.Exists<ItemDbModel>(new { Name = name }))
+                    return false;
+                dbOpen.Delete<ItemDbModel>((x) => x.Name == name);
                 return true;
             }
         }

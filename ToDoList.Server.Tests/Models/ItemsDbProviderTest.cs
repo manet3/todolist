@@ -1,28 +1,43 @@
-﻿using ToDoList.Shared;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ToDoList.Server.Models;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using ToDoList.Server.Database;
+using ToDoList.Server.Database.Models;
+using ToDoList.Shared;
 using System.Collections.Generic;
 using System.Linq;
+using AutoMapper;
 
 namespace ToDoList.Server.Tests.Models
 {
     [TestClass]
     public class ItemsDbProviderTests
     {
-        private ToDoItem[] TestSet = new[] { new ToDoItem("Test item", index:1),
-            new ToDoItem("Test item 1"), new ToDoItem("Test item 2", true)};
+        [ClassInitialize]
+        public static void MapDbModel(TestContext context)
+            => Mapper.Initialize(m => m.CreateMap<ItemDbModel, ToDoItem>());
+
+        private ItemDbModel[] TestSet = new[] {
+            new ItemDbModel{Name = "Test item" },
+            new ItemDbModel{Name = "Test item 1" },
+            new ItemDbModel{ Name = "Test item 2", IsChecked = true } };
+
+        private ToDoItem[] GetComapableCollection(IEnumerable<ItemDbModel> dbModels)
+            => Mapper.Map<IEnumerable<ToDoItem>>(dbModels).ToArray();
 
         [TestMethod]
         public void DB_Update()
         {
-            var expected = new[] { new ToDoItem("Test item"),
-                new ToDoItem("Test item 1", true)};
+            var expected = new[] {
+            new ItemDbModel{Name = "Test item 2", IsChecked = true },
+            new ItemDbModel{ Name = "Test item" } };
 
             ItemsDbProvider.UpdateDB(TestSet);
             ItemsDbProvider.UpdateDB(expected);
-            ItemsDbProvider.GetDBItems(out IEnumerable<ToDoItem> gotItems);
+            ItemsDbProvider.TryGetDBItems(out IEnumerable<ItemDbModel> gotItems);
 
-            CollectionAssert.AreEqual(expected, gotItems.Select((x) => x).ToArray());
+            //for correct equals comparation
+            CollectionAssert.AreEqual(
+                GetComapableCollection(expected)
+                ,GetComapableCollection(gotItems));
 
         }
 
@@ -31,12 +46,13 @@ namespace ToDoList.Server.Tests.Models
         {
             //Arrange
             ItemsDbProvider.UpdateDB(TestSet);
-            var expected = new[] { new ToDoItem("Test item 1"), new ToDoItem("Test item") } ;
             //Act
-            ItemsDbProvider.GetDBItems(out IEnumerable<ToDoItem> gotItems);
+            ItemsDbProvider.TryGetDBItems(out IEnumerable<ItemDbModel> gotItems);
             //Assert
             Assert.IsNotNull(gotItems);
-            CollectionAssert.AreEqual(TestSet, gotItems.Select((x)=>x).ToArray());
+            CollectionAssert.AreEqual(
+                GetComapableCollection(TestSet),
+                GetComapableCollection(gotItems));
         }
 
 
@@ -44,14 +60,36 @@ namespace ToDoList.Server.Tests.Models
         public void DB_Delete()
         {
             ItemsDbProvider.UpdateDB(TestSet);
-            var expected = new[] {new ToDoItem("Test item"), new ToDoItem("Test item 2") };
+            var expected = new[] { new ItemDbModel { Name = "Test item" },
+                new ItemDbModel { Name = "Test item 2" } };
 
-            var succeed = ItemsDbProvider.RemoveDBItem("Test item 1");
+            var succeed = ItemsDbProvider.TryRemoveDBItem("Test item 1");
 
-            ItemsDbProvider.GetDBItems(out IEnumerable<ToDoItem> gotItems);
+            ItemsDbProvider.TryGetDBItems(out IEnumerable<ItemDbModel> gotItems);
 
             Assert.IsTrue(succeed);
-            CollectionAssert.AreEqual(expected, gotItems.Select((x) => x).ToArray());
+            CollectionAssert.AreEqual(
+                GetComapableCollection(expected), 
+                GetComapableCollection(gotItems));
         }
+
+        [TestMethod]
+        public void DB_Add()
+        {
+            ItemsDbProvider.UpdateDB(new ItemDbModel[0]);
+            var expected = new[] { new ItemDbModel { Name = "Test item" },
+                new ItemDbModel { Name = "Test item 2" } };
+
+            ItemsDbProvider.AddToDB(new ItemDbModel { Name = "Test item" });
+
+            ItemsDbProvider.AddToDB(new ItemDbModel { Name = "Test item 2" });
+
+            ItemsDbProvider.TryGetDBItems(out IEnumerable<ItemDbModel> gotItems);
+
+            CollectionAssert.AreEqual(
+                GetComapableCollection(expected),
+                GetComapableCollection(gotItems));
+        }
+
     }
 }
