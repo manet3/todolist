@@ -6,7 +6,7 @@ using System.Data;
 using System.Linq;
 using ToDoList.Shared;
 
-namespace ToDoList.Server.Models
+namespace ToDoList.Server.Database
 {
     public static class ItemsDbProvider
     {

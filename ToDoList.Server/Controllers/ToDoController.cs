@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
-using ToDoList.Server.Models;
+using ToDoList.Server.Database;
 using ToDoList.Shared;
 
 namespace ToDoList.Server.Controllers
@@ -24,15 +24,14 @@ namespace ToDoList.Server.Controllers
             ItemsDbProvider.AddToDB(task);
         }
 
-        [AcceptVerbs("PUT", "PATCH")]
+        [HttpPut, HttpPatch]
         [ActionName("Change")]
-        public void RwriteItems(IEnumerable<ToDoItem> new_tasks)
+        public void RewriteItems(IEnumerable<ToDoItem> new_tasks)
         {
             ItemsDbProvider.UpdateDB(new_tasks);
         }
 
-        [ActionName("Remove")]
-        public void DeleteTask(string name)
+        public void Delete(string name)
         {
             ItemsDbProvider.RemoveDBItem(name);
         }
