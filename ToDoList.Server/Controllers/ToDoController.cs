@@ -6,6 +6,7 @@ using AutoMapper;
 using ToDoList.Shared;
 using System.Net;
 using System.Net.Http;
+using CSharpFunctionalExtensions;
 
 namespace ToDoList.Server.Controllers
 {
@@ -14,38 +15,61 @@ namespace ToDoList.Server.Controllers
         [HttpGet]
         public IEnumerable<ToDoItem> List()
         {
-            if (!ItemsDbProvider.TryGetDBItems(out IEnumerable<ItemDbModel> dbItems))
-                throw GetExceptionWith("Could not get items from DB.");
+            ResultCheck(ItemsDbProvider.CreateTableIfNotExists());
 
-            return Mapper.Map<IEnumerable<ToDoItem>>(dbItems);
+            var result = ItemsDbProvider.GetDBItems();
+            ResultCheck(result);
+
+            return Mapper.Map<IEnumerable<ToDoItem>>(result.Value);
         }
 
         [HttpPost]
-        public void Add(ToDoItem task)
+        public void Add(ToDoItem item)
         {
-            if (task == null)
-                throw GetExceptionWith("Failed to get client data.", HttpStatusCode.BadRequest);
-            ItemsDbProvider.AddToDB(Mapper.Map<ItemDbModel>(task));
+            NullCheck(item);
+            ResultCheck(ItemsDbProvider.CreateTableIfNotExists());
+            ItemsDbProvider.AddToDB(Mapper.Map<ItemDbModel>(item));
         }
 
         [HttpPut, HttpPatch]
         public void Change(IEnumerable<ToDoItem> new_tasks)
         {
-            if (new_tasks == null)
-                throw GetExceptionWith("Failed to get client data.", HttpStatusCode.BadRequest);
-            ItemsDbProvider.UpdateDB(Mapper.Map<IEnumerable<ItemDbModel>>(new_tasks));
+            NullCheck(new_tasks);
+            ResultCheck(ItemsDbProvider.CreateTableIfNotExists());
+            ResultCheck(ItemsDbProvider.DBRewrite(Mapper.Map<IEnumerable<ItemDbModel>>(new_tasks)));
         }
+
+        [HttpPut, HttpPatch]
+        public void Change(ToDoItem item)
+        {
+            NullCheck(item);
+            ResultCheck(ItemsDbProvider.CreateTableIfNotExists());
+            ResultCheck(ItemsDbProvider.AddToDB(Mapper.Map<ItemDbModel>(item)));
+        }
+
 
         [HttpDelete]
         public void Delete(string name)
         {
-            if(!ItemsDbProvider.TryRemoveDBItem(name))
-                throw GetExceptionWith("Cannot delete item.");
+            NullCheck(name);
+            ResultCheck(ItemsDbProvider.CreateTableIfNotExists());
+            ResultCheck(ItemsDbProvider.TryRemoveDBItem(name));
+        }
 
+        private void NullCheck(object item)
+        {
+            if (item == null)
+                throw GetExceptionWith("Failed to get client data.");
+        }
+
+        private void ResultCheck(Result result)
+        {
+            if (result.IsFailure)
+                throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
         }
 
         private HttpResponseException GetExceptionWith(string reasonForFailure, 
-            HttpStatusCode statusCode = HttpStatusCode.InternalServerError)
+            HttpStatusCode statusCode = HttpStatusCode.BadRequest)
             => new HttpResponseException(new HttpResponseMessage(statusCode) { ReasonPhrase = reasonForFailure });
     }
 }

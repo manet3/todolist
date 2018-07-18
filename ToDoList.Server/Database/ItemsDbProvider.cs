@@ -1,7 +1,10 @@
-﻿using ServiceStack;
+﻿using CSharpFunctionalExtensions;
+using ServiceStack;
 using ServiceStack.OrmLite;
+using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using ToDoList.Server.Database.Models;
 
@@ -9,79 +12,81 @@ namespace ToDoList.Server.Database
 {
     public static class ItemsDbProvider
     {
-        private static readonly string _dbFilePath;
+        public static readonly string DbFilePath;
 
         private static readonly OrmLiteConnectionFactory _dbFactory;
 
         static ItemsDbProvider()
         {
-            _dbFilePath = "~/App_Data/todoDB.sqlite".MapHostAbsolutePath();
-            _dbFactory = new OrmLiteConnectionFactory(_dbFilePath, SqliteDialect.Provider);
+            DbFilePath = "~/App_Data/todoDB.sqlite".MapHostAbsolutePath();
+            _dbFactory = new OrmLiteConnectionFactory(DbFilePath, SqliteDialect.Provider);
         }
 
-        public static void AddToDB(ItemDbModel item)
-        {
-            using (var dbOpen = _dbFactory.Open())
-            {
-                dbOpen.CreateTableIfNotExists<ItemDbModel>();
-                if (!TryUpdateDBItem(item, dbOpen))
-                    dbOpen.Insert(item);
-                return;
-            }
-        }
+        public static Result CreateTableIfNotExists()
+            => SqlExceptionHandler(
+                dbConn => Result.Ok(dbConn.CreateTableIfNotExists<ItemDbModel>()),
+                "Could not complete CreateTableIfNotExists.");
 
-        public static bool TryGetDBItems(out IEnumerable<ItemDbModel> items)
-        {
-            using (var dbOpen = _dbFactory.Open())
-            {
-                try
+        public static Result AddToDB(ItemDbModel item)
+            => SqlExceptionHandler(
+                dbConn =>
                 {
-                    items = dbOpen
-                        .Select<ItemDbModel>()
-                        .ToList();
-                    //because items are got in opposite order
-                    items.Reverse();
-                    return true;
-                }
-                catch (System.Data.SQLite.SQLiteException)
-                {
-                    items = new ItemDbModel[0];
-                    return false;
-                }
-            }
-        }
+                    if (dbConn.Exists<ItemDbModel>(new { Name = item.Name }))
+                        return Result.Fail("This item already exists.");
+                    else return Result.Ok(dbConn.Insert(item));
+                },
+                "Could not add item to DB.");
 
-        public static bool TryUpdateDBItem(ItemDbModel task, IDbConnection dbOpen)
-        {
-            var itemFound = dbOpen.Exists<ItemDbModel>(new { Name = task.Name });
-            if (itemFound)
-                dbOpen.Update(task);
-            return itemFound;
-        }
+        public static Result<IEnumerable<ItemDbModel>> GetDBItems()
+            => SqlExceptionHandler(dbConn =>
+                Result.Ok<IEnumerable<ItemDbModel>>(dbConn.Select<ItemDbModel>()),
+                "Failed to get DB table");
 
-        public static void UpdateDB(IEnumerable<ItemDbModel> item_set)
-        {
-            using (var dbOpen = _dbFactory.Open())
+        public static Result DBRewrite(IEnumerable<ItemDbModel> item_set)
+            => SqlExceptionHandler(dbConn =>
             {
-                if (dbOpen.TableExists<ItemDbModel>())
-                    dbOpen.DeleteAll<ItemDbModel>();
-                else dbOpen.CreateTable<ItemDbModel>();
+                var n = dbConn.DeleteAll<ItemDbModel>();
+                dbConn.InsertAll(item_set);
 
-                foreach (var item in item_set)
-                    if (!TryUpdateDBItem(item, dbOpen))
-                        dbOpen.Insert(item);
-                return;
-            }
-        }
+                return Result.Ok(n);
+            },
+                "Failed to rewrite DB table");
 
-        public static bool TryRemoveDBItem(string name)
-        {
-            using (var dbOpen = _dbFactory.Open())
+        public static Result DBUpdateItem(ItemDbModel item)
+            => SqlExceptionHandler(dbConn => Result.Ok((long)dbConn.Update(item)),
+                "Failed to update item");
+
+        public static Result TryRemoveDBItem(string name)
+            => SqlExceptionHandler(dbConn =>
             {
-                if (!dbOpen.Exists<ItemDbModel>(new { Name = name }))
-                    return false;
-                dbOpen.Delete<ItemDbModel>((x) => x.Name == name);
-                return true;
+                if (!dbConn.Exists<ItemDbModel>(new { Name = name }))
+                    return Result.Fail("Item not found");
+                return Result.Ok(dbConn.Delete<ItemDbModel>((x) => x.Name == name));
+            }, 
+                "Failed to delete item");
+
+        private static Result<T> SqlExceptionHandler<T>(Func<IDbConnection, Result<T>> func, string customErrorMessagePart)
+            => SqlExceptionHandlerCommon(func,
+                ex => Result.Fail<T>($"{customErrorMessagePart} Error: {ex.Message}"),
+                customErrorMessagePart);
+
+        private static Result SqlExceptionHandler(Func<IDbConnection, Result> func, string customErrorMessagePart)
+            => SqlExceptionHandlerCommon(func,
+                ex => Result.Fail($"{customErrorMessagePart} Error: {ex.Message}"),
+                customErrorMessagePart);
+
+        private static T SqlExceptionHandlerCommon<T>(
+            Func<IDbConnection, T> func, Func<SqlException, T> errorReturn,
+            string customErrorMessagePart)
+        {
+            try
+            {
+                using (var dbConn = _dbFactory.Open())
+                    return func.Invoke(dbConn);
+            }
+            catch (SqlException ex)
+            {
+                return errorReturn.Invoke(ex);
             }
         }
     }

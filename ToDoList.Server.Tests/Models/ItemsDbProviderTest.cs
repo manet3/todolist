@@ -1,94 +1,118 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ToDoList.Server.Database;
 using ToDoList.Server.Database.Models;
+using ServiceStack.OrmLite;
 using ToDoList.Shared;
 using System.Collections.Generic;
 using System.Linq;
-using AutoMapper;
+using FluentAssertions;
 
 namespace ToDoList.Server.Tests.Models
 {
     [TestClass]
     public class ItemsDbProviderTests
     {
-        [ClassInitialize]
-        public static void MapDbModel(TestContext context)
-            => Mapper.Initialize(m => m.CreateMap<ItemDbModel, ToDoItem>());
-
         private ItemDbModel[] TestSet = new[] {
             new ItemDbModel{Name = "Test item" },
             new ItemDbModel{Name = "Test item 1" },
             new ItemDbModel{ Name = "Test item 2", IsChecked = true } };
 
-        private ToDoItem[] GetComapableCollection(IEnumerable<ItemDbModel> dbModels)
-            => Mapper.Map<IEnumerable<ToDoItem>>(dbModels).ToArray();
+        private static OrmLiteConnectionFactory _dbFactory;
+
+        [ClassInitialize]
+        public static void DBInit(TestContext context)
+            =>_dbFactory = new OrmLiteConnectionFactory(ItemsDbProvider.DbFilePath);
+
+        private ToDoItem[] GetComarableCollection(IEnumerable<ItemDbModel> dbModels)
+            => dbModels.Select(m => new ToDoItem { Name = m.Name, IsChecked = m.IsChecked}).ToArray();
 
         [TestMethod]
-        public void DB_Update()
+        public void DB_Rewrite()
         {
-            var expected = new[] {
-            new ItemDbModel{Name = "Test item 2", IsChecked = true },
-            new ItemDbModel{ Name = "Test item" } };
-
-            ItemsDbProvider.UpdateDB(TestSet);
-            ItemsDbProvider.UpdateDB(expected);
-            ItemsDbProvider.TryGetDBItems(out IEnumerable<ItemDbModel> gotItems);
-
-            //for correct equals comparation
-            CollectionAssert.AreEqual(
-                GetComapableCollection(expected)
-                ,GetComapableCollection(gotItems));
-
+            using (var dbConn = _dbFactory.Open())
+            {
+                //act
+                var res = ItemsDbProvider.DBRewrite(TestSet);
+                var gotItems = GetComarableCollection(dbConn.Select<ItemDbModel>());
+                //assert
+                res.IsSuccess.Should().BeTrue();
+                GetComarableCollection(TestSet).Should()
+                    .Equal(gotItems);
+            }
         }
 
         [TestMethod]
         public void DB_Get()
         {
-            //Arrange
-            ItemsDbProvider.UpdateDB(TestSet);
-            //Act
-            ItemsDbProvider.TryGetDBItems(out IEnumerable<ItemDbModel> gotItems);
-            //Assert
-            Assert.IsNotNull(gotItems);
-            CollectionAssert.AreEqual(
-                GetComapableCollection(TestSet),
-                GetComapableCollection(gotItems));
+            using (var dbConn = _dbFactory.Open())
+            {
+                //arrange
+                dbConn.DeleteAll<ItemDbModel>();
+                dbConn.InsertAll(TestSet);
+                //act
+                var res = ItemsDbProvider.GetDBItems();
+                //assert
+                res.IsSuccess.Should().BeTrue();
+                GetComarableCollection(res.Value).Should()
+                    .Equal(GetComarableCollection(TestSet));
+            }
         }
 
 
         [TestMethod]
-        public void DB_Delete()
+        public void CanDeleteItem()
         {
-            ItemsDbProvider.UpdateDB(TestSet);
-            var expected = new[] { new ItemDbModel { Name = "Test item" },
+            using (var dbConn = _dbFactory.Open())
+            {
+                //arrange
+                dbConn.DeleteAll<ItemDbModel>();
+                dbConn.InsertAll(TestSet);
+
+                var expected = new[] { new ItemDbModel { Name = "Test item" },
                 new ItemDbModel { Name = "Test item 2" } };
 
-            var succeed = ItemsDbProvider.TryRemoveDBItem("Test item 1");
+                //act
+                var res = ItemsDbProvider.TryRemoveDBItem("Test item 1");
+                var checkItems = GetComarableCollection(dbConn.Select<ItemDbModel>());
 
-            ItemsDbProvider.TryGetDBItems(out IEnumerable<ItemDbModel> gotItems);
-
-            Assert.IsTrue(succeed);
-            CollectionAssert.AreEqual(
-                GetComapableCollection(expected), 
-                GetComapableCollection(gotItems));
+                //assert
+                res.IsSuccess.Should().BeTrue();
+                checkItems.Should().Equal(GetComarableCollection(expected));
+            }
         }
 
         [TestMethod]
-        public void DB_Add()
+        public void CanUpdateItem()
         {
-            ItemsDbProvider.UpdateDB(new ItemDbModel[0]);
-            var expected = new[] { new ItemDbModel { Name = "Test item" },
-                new ItemDbModel { Name = "Test item 2" } };
+            using (var dbConn = _dbFactory.Open())
+            {
+                //arrange
+                dbConn.DeleteAll<ItemDbModel>();
+                //act
+                dbConn.Insert(new ItemDbModel { Name = "Test item" });
+                var res = ItemsDbProvider.DBUpdateItem(new ItemDbModel { Name = "Test item 1", IsChecked = true });
+                var checkItems = GetComarableCollection(dbConn.Select<ItemDbModel>());
+                //assert
+                res.IsFailure.Should().BeFalse();
+                checkItems.Should().Equal(new ToDoItem { Name = "Test item", IsChecked = true });
+            }
+        }
 
-            ItemsDbProvider.AddToDB(new ItemDbModel { Name = "Test item" });
-
-            ItemsDbProvider.AddToDB(new ItemDbModel { Name = "Test item 2" });
-
-            ItemsDbProvider.TryGetDBItems(out IEnumerable<ItemDbModel> gotItems);
-
-            CollectionAssert.AreEqual(
-                GetComapableCollection(expected),
-                GetComapableCollection(gotItems));
+        [TestMethod]
+        public void FailsAddingNonUniqueItem()
+        {
+            using (var dbConn = _dbFactory.Open())
+            {
+                //arrange
+                var item = new ItemDbModel { Name = "Existing item" };
+                dbConn.DeleteAll<ItemDbModel>();
+                dbConn.Insert(item);
+                //act
+                item.IsChecked = true;
+                var res = ItemsDbProvider.AddToDB(item);
+                //assert
+                res.IsFailure.Should().BeTrue("should throw {}", res.Error);
+            }
         }
 
     }
