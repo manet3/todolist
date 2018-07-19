@@ -58,13 +58,12 @@
     <Compile Include="Controls\ErrorShowUp.xaml.cs">
       <DependentUpon>ErrorShowUp.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\TaskControl.xaml.cs">
-      <DependentUpon>TaskControl.xaml</DependentUpon>
+    <Compile Include="Controls\ToDoItemControl.xaml.cs">
+      <DependentUpon>ToDoItemControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Models\TaskModel.cs" />
-    <Compile Include="Models\ToDoModel.cs" />
-    <Compile Include="ViewModels\TaskVM.cs" />
-    <Compile Include="ViewModels\ToDoVM.cs" />
+    <Compile Include="Models\ToDoItemModel.cs" />
+    <Compile Include="ViewModels\ToDoViewModel.cs" />
+    <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
@@ -76,15 +75,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\TaskControl.xaml">
+    <Page Include="Controls\ToDoItemControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Resources\SimpleStyles.xaml">
+    <Page Include="Resources\Styles\SimpleStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Resources\SimpleWindowStyle.xaml">
+    <Page Include="Resources\Styles\SimpleWindowStyle.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -119,5 +118,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

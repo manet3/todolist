@@ -11,19 +11,13 @@ namespace ToDoList.Client
         public event EventHandler CanExecuteChanged;
 
         public Command(Action<object> handler)
-        {
-            _action = handler;
-        }
+            => _action = handler;
 
         public Command(Action<object> handler, Func<bool> callable) : this(handler)
-        {
-            _callable = callable;
-        }
+            => _callable = callable;
 
         public void RaiseExecuteChanged()
-        {
-            CanExecuteChanged?.Invoke(this, new EventArgs());
-        }
+            => CanExecuteChanged?.Invoke(this, new EventArgs());
 
         public bool CanExecute(object parameter)
         {

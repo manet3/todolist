@@ -25,6 +25,7 @@
             </Line>
             <Border Name="mainBorder" Background="IndianRed" BorderBrush="DimGray" BorderThickness="1" 
                 CornerRadius="5">
+                
                 <TextBlock Foreground="DarkRed"
                        FontWeight="SemiBold"
                        FontSize="14"
@@ -33,11 +34,14 @@
                        Text="{Binding ErrorText, 
                 RelativeSource={RelativeSource AncestorType=UserControl}}"
                        Name ="mesText"/>
+                
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Height" Value="0"/>
+                        
                         <Style.Triggers>
                             <MultiDataTrigger>
+                                
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding GotMessage, 
                             RelativeSource={RelativeSource  AncestorType=UserControl}}"
@@ -45,16 +49,19 @@
                                     <Condition Binding="{Binding IsChecked, ElementName=crossButton}" 
                                            Value="false"/>
                                 </MultiDataTrigger.Conditions>
+                                
                                 <MultiDataTrigger.EnterActions>
                                     <BeginStoryboard>
                                         <Storyboard>
-                                            <DoubleAnimation Duration="0:0:1" AccelerationRatio="0.5"
-                                                 DecelerationRatio="0.5"
-                                                 Storyboard.TargetProperty="Height"
-                                                 From ="0" To="55"/>
+                                            <DoubleAnimation Duration="0:0:1" 
+                                                             AccelerationRatio="0.5"
+                                                             DecelerationRatio="0.5"
+                                                             Storyboard.TargetProperty="Height"
+                                                             To="55"/>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </MultiDataTrigger.EnterActions>
+                                
                                 <MultiDataTrigger.ExitActions>
                                     <BeginStoryboard>
                                         <Storyboard Duration="0:0:1">
@@ -65,8 +72,10 @@
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </MultiDataTrigger.ExitActions>
+                                
                             </MultiDataTrigger>
                         </Style.Triggers>
+                        
                     </Style>
                 </Border.Style>
             </Border>
@@ -76,12 +85,19 @@
             <ToggleButton.Template>
                 <ControlTemplate TargetType="ToggleButton">
                     <Grid Name="controlGrid" Visibility="Collapsed">
-                        <Grid HorizontalAlignment="Left" VerticalAlignment="Top" Height="18" Width="18">
+                        <Grid HorizontalAlignment="Left" 
+                              VerticalAlignment="Top">
+                            
                             <Ellipse Name="crossBtEllipse" 
-                                 RenderTransformOrigin="0.5,0.5"
-                                 Fill="Red" Stroke="DimGray" StrokeThickness="1"/>
-                            <Path Margin="1,1,1,1" HorizontalAlignment="Center" VerticalAlignment="Center" 
-                  Data="M 0 0 L 8 8 M 8 0 L 0 8" Stroke="White" StrokeThickness="3"/>
+                                     RenderTransformOrigin="0.5,0.5"
+                                     Height="18" Width="18"
+                                     Fill="Red" 
+                                     Stroke="DimGray" StrokeThickness="1"/>
+                            <Path HorizontalAlignment="Center" 
+                                  VerticalAlignment="Center" 
+                                  Data="M 0 0 L 8 8 M 8 0 L 0 8" 
+                                  Stroke="White" StrokeThickness="3"/>
+                            
                         </Grid>
                     </Grid>
 
