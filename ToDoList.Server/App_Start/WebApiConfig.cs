@@ -1,10 +1,9 @@
 ﻿using AutoMapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Web.Http;
 using ToDoList.Server.Database.Models;
 using ToDoList.Shared;
+using ToDoList.Server.Database;
+using System;
 
 namespace ToDoList.Server
 {
@@ -13,17 +12,17 @@ namespace ToDoList.Server
         public static void Register(HttpConfiguration config)
         {
             // Web API configuration and services
-            Mapper.Initialize(m => m.CreateMap<ItemDbModel, ToDoItem>());
+            Mapper.Initialize(m => m.CreateMap<ToDoItem, ItemDbModel>());
+
+            ItemsDbProvider.CreateTableIfNotExists();
 
             // Web API routes
             config.MapHttpAttributeRoutes();
 
             config.Routes.MapHttpRoute(
-                name: "DefaultApi",
-                routeTemplate: "api/{controller}/{id}",
-                //routeTemplate: "{id}",
-                defaults: new { id = RouteParameter.Optional }
-            );
+                name: "ApiDefault",
+                routeTemplate: "{action}",
+                defaults: new { controller = "todo" });
         }
     }
 }

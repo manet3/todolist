@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
 using ToDoList.Server.Database.Models;
 
 namespace ToDoList.Server.Database
@@ -22,10 +21,18 @@ namespace ToDoList.Server.Database
             _dbFactory = new OrmLiteConnectionFactory(DbFilePath, SqliteDialect.Provider);
         }
 
-        public static Result CreateTableIfNotExists()
-            => SqlExceptionHandler(
-                dbConn => Result.Ok(dbConn.CreateTableIfNotExists<ItemDbModel>()),
-                "Could not complete CreateTableIfNotExists.");
+        public static void CreateTableIfNotExists()
+        {
+            using (var dbConn = _dbFactory.Open())
+                try
+                {
+                    dbConn.CreateTableIfNotExists<ItemDbModel>();
+                }
+                catch(Exception)
+                {
+                    throw new Exception("Could not create table ItemDbModel.");
+                }
+        }
 
         public static Result AddToDB(ItemDbModel item)
             => SqlExceptionHandler(

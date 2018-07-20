@@ -6,55 +6,63 @@ using ToDoList.Shared;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
+using System.IO;
 
 namespace ToDoList.Server.Tests.Models
 {
     [TestClass]
     public class ItemsDbProviderTests
     {
-        private ItemDbModel[] TestSet = new[] {
+        private ItemDbModel[] _testSet = new [] {
             new ItemDbModel{Name = "Test item" },
             new ItemDbModel{Name = "Test item 1" },
             new ItemDbModel{ Name = "Test item 2", IsChecked = true } };
 
         private static OrmLiteConnectionFactory _dbFactory;
 
-        [ClassInitialize]
-        public static void DBInit(TestContext context)
-            =>_dbFactory = new OrmLiteConnectionFactory(ItemsDbProvider.DbFilePath);
+        [TestInitialize]
+        public void DbInitialize()
+        {
+            _dbFactory = new OrmLiteConnectionFactory(ItemsDbProvider.DbFilePath);
+            using (var dbConn = _dbFactory.Open())
+                dbConn.CreateTable(modelType: typeof(ItemsDbProvider), overwrite: true);
+        }
+
+        public void DbFileRemove()
+            => File.Delete(ItemsDbProvider.DbFilePath);
 
         private ToDoItem[] GetComarableCollection(IEnumerable<ItemDbModel> dbModels)
             => dbModels.Select(m => new ToDoItem { Name = m.Name, IsChecked = m.IsChecked}).ToArray();
 
         [TestMethod]
-        public void DB_Rewrite()
+        public void CanRewriteItemsTable()
         {
             using (var dbConn = _dbFactory.Open())
             {
                 //act
-                var res = ItemsDbProvider.DBRewrite(TestSet);
+                var res = ItemsDbProvider.DBRewrite(_testSet);
                 var gotItems = GetComarableCollection(dbConn.Select<ItemDbModel>());
                 //assert
                 res.IsSuccess.Should().BeTrue();
-                GetComarableCollection(TestSet).Should()
+                GetComarableCollection(_testSet).Should()
                     .Equal(gotItems);
             }
         }
 
         [TestMethod]
-        public void DB_Get()
+        public void CanGetItems()
         {
             using (var dbConn = _dbFactory.Open())
             {
                 //arrange
                 dbConn.DeleteAll<ItemDbModel>();
-                dbConn.InsertAll(TestSet);
+                dbConn.InsertAll(_testSet);
                 //act
                 var res = ItemsDbProvider.GetDBItems();
                 //assert
                 res.IsSuccess.Should().BeTrue();
                 GetComarableCollection(res.Value).Should()
-                    .Equal(GetComarableCollection(TestSet));
+                    .Equal(GetComarableCollection(_testSet));
             }
         }
 
@@ -66,7 +74,7 @@ namespace ToDoList.Server.Tests.Models
             {
                 //arrange
                 dbConn.DeleteAll<ItemDbModel>();
-                dbConn.InsertAll(TestSet);
+                dbConn.InsertAll(_testSet);
 
                 var expected = new[] { new ItemDbModel { Name = "Test item" },
                 new ItemDbModel { Name = "Test item 2" } };
