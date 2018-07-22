@@ -6,17 +6,19 @@ using ToDoList.Shared;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
-using System.IO;
+using System.Collections.ObjectModel;
 
 namespace ToDoList.Server.Tests.Models
 {
     [TestClass]
     public class ItemsDbProviderTests
     {
-        private ItemDbModel[] _testSet = new [] {
-            new ItemDbModel{Name = "Test item" },
-            new ItemDbModel{Name = "Test item 1" },
-            new ItemDbModel{ Name = "Test item 2", IsChecked = true } };
+        private ReadOnlyCollection<ItemDbModel> _testSet = new List<ItemDbModel>
+        {
+            new ItemDbModel { Name = "Test item" },
+            new ItemDbModel { Name = "Test item 1" },
+            new ItemDbModel { Name = "Test item 2", IsChecked = true }
+        }.AsReadOnly();
 
         private static OrmLiteConnectionFactory _dbFactory;
 
@@ -25,14 +27,18 @@ namespace ToDoList.Server.Tests.Models
         {
             _dbFactory = new OrmLiteConnectionFactory(ItemsDbProvider.DbFilePath);
             using (var dbConn = _dbFactory.Open())
-                dbConn.CreateTable(modelType: typeof(ItemsDbProvider), overwrite: true);
+                dbConn.CreateTable(modelType: typeof(ItemDbModel), overwrite: true);
         }
 
+        [TestCleanup]
         public void DbFileRemove()
-            => File.Delete(ItemsDbProvider.DbFilePath);
+        {
+            using (var dbConn = _dbFactory.Open())
+                dbConn.DropTable<ItemDbModel>();
+        }
 
         private ToDoItem[] GetComarableCollection(IEnumerable<ItemDbModel> dbModels)
-            => dbModels.Select(m => new ToDoItem { Name = m.Name, IsChecked = m.IsChecked}).ToArray();
+            => dbModels.Select(m => new ToDoItem { Name = m.Name, IsChecked = m.IsChecked }).ToArray();
 
         [TestMethod]
         public void CanRewriteItemsTable()

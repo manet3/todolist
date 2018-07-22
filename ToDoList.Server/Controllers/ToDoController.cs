@@ -6,6 +6,7 @@ using AutoMapper;
 using ToDoList.Shared;
 using System.Net;
 using System.Net.Http;
+using CSharpFunctionalExtensions;
 
 namespace ToDoList.Server.Controllers
 {
@@ -14,6 +15,8 @@ namespace ToDoList.Server.Controllers
         [HttpGet]
         public IEnumerable<ToDoItem> List()
         {
+            ThrowIfDbNotExists();
+
             var result = ItemsDbProvider.GetDBItems();
 
             if (result.IsFailure)
@@ -25,8 +28,9 @@ namespace ToDoList.Server.Controllers
         [HttpPost]
         public void Add(ToDoItem item)
         {
-            if (item == null)
-                throw GetExceptionWith();
+            ThrowIfDbNotExists();
+
+            OnNullThrowArgumentException(item);
 
             var result = ItemsDbProvider.AddToDB(Mapper.Map<ItemDbModel>(item));
 
@@ -37,8 +41,9 @@ namespace ToDoList.Server.Controllers
         [HttpPut, HttpPatch]
         public void Rewrite(IEnumerable<ToDoItem> new_items)
         {
-            if (new_items == null)
-                throw GetExceptionWith();
+            ThrowIfDbNotExists();
+
+            OnNullThrowArgumentException(new_items);
 
             var result = ItemsDbProvider.DBRewrite(Mapper.Map<IEnumerable<ItemDbModel>>(new_items));
 
@@ -49,8 +54,9 @@ namespace ToDoList.Server.Controllers
         [HttpPatch]
         public void Change(ToDoItem item)
         {
-            if (item == null)
-                throw GetExceptionWith();
+            ThrowIfDbNotExists();
+
+            OnNullThrowArgumentException(item);
 
             var result = ItemsDbProvider.AddToDB(Mapper.Map<ItemDbModel>(item));
 
@@ -59,12 +65,12 @@ namespace ToDoList.Server.Controllers
 
         }
 
-
         [HttpDelete]
         public void Delete(string name)
         {
-            if (name == null)
-                throw GetExceptionWith();
+            ThrowIfDbNotExists();
+
+            OnNullThrowArgumentException(name);
 
             var result = ItemsDbProvider.TryRemoveDBItem(name);
 
@@ -72,9 +78,20 @@ namespace ToDoList.Server.Controllers
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
         }
 
-        private HttpResponseException GetExceptionWith(
-            string reasonForFailure = "Failed to get client data.",
-            HttpStatusCode statusCode = HttpStatusCode.BadRequest)
-            => new HttpResponseException(new HttpResponseMessage(statusCode) { ReasonPhrase = reasonForFailure });
+        private void OnNullThrowArgumentException(object argument)
+        {
+            if (argument == null)
+                throw GetExceptionWith("Failed to get client data.", HttpStatusCode.BadRequest);
+        }
+
+        private void ThrowIfDbNotExists()
+        {
+            if (ItemsDbProvider.TableCreationResult.IsFailure)
+                throw GetExceptionWith(ItemsDbProvider.TableCreationResult.Error, HttpStatusCode.ServiceUnavailable);
+        }
+
+        private HttpResponseException GetExceptionWith(string reasonForFailure, HttpStatusCode statusCode)
+            => new HttpResponseException(new HttpResponseMessage(statusCode)
+            { ReasonPhrase = reasonForFailure.Replace("\r\n", " | ") });
     }
 }

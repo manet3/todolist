@@ -21,17 +21,22 @@ namespace ToDoList.Server.Database
             _dbFactory = new OrmLiteConnectionFactory(DbFilePath, SqliteDialect.Provider);
         }
 
-        public static void CreateTableIfNotExists()
+        public static Result TableCreationResult { get; private set; }
+
+        public static Result CreateDbTable()
         {
-            using (var dbConn = _dbFactory.Open())
-                try
-                {
+            try
+            {
+                using (var dbConn = _dbFactory.Open())
                     dbConn.CreateTableIfNotExists<ItemDbModel>();
-                }
-                catch(Exception)
-                {
-                    throw new Exception("Could not create table ItemDbModel.");
-                }
+                TableCreationResult = Result.Ok();
+                return TableCreationResult;
+            }
+            catch (Exception ex)
+            {
+                TableCreationResult = Result.Fail($"Failed to create ItemDbModel table. Error: {ex.Message}");
+                return TableCreationResult;
+            }
         }
 
         public static Result AddToDB(ItemDbModel item)
@@ -69,7 +74,7 @@ namespace ToDoList.Server.Database
                 if (!dbConn.Exists<ItemDbModel>(new { Name = name }))
                     return Result.Fail("Item not found");
                 return Result.Ok(dbConn.Delete<ItemDbModel>((x) => x.Name == name));
-            }, 
+            },
                 "Failed to delete item");
 
         private static Result<T> SqlExceptionHandler<T>(Func<IDbConnection, Result<T>> func, string customErrorMessagePart)

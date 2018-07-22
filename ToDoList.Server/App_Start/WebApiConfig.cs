@@ -13,9 +13,6 @@ namespace ToDoList.Server
         {
             // Web API configuration and services
             Mapper.Initialize(m => m.CreateMap<ToDoItem, ItemDbModel>());
-
-            ItemsDbProvider.CreateTableIfNotExists();
-
             // Web API routes
             config.MapHttpAttributeRoutes();
 
