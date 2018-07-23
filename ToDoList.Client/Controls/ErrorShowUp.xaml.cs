@@ -22,7 +22,8 @@ namespace ToDoList.Client.Controls
         private bool _gotMessage;
         public bool GotMessage
         {
-            get => _gotMessage; set
+            get => _gotMessage;
+            set
             {
                 _gotMessage = value;
                 PropertyChanged?.Invoke(this,

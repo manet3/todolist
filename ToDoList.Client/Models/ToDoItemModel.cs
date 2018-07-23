@@ -1,13 +1,13 @@
 ﻿namespace ToDoList.Client
 {
-    public class TaskModel
+    public class ToDoItemModel
     {
         public bool IsChecked { get; set; }
 
         public string Name { get; set; }
 
         public override bool Equals(object obj)
-            => obj is TaskModel && ((TaskModel)obj).Name.Equals(Name);
+            => obj is ToDoItemModel && ((ToDoItemModel)obj).Name.Equals(Name);
 
         public override int GetHashCode()
             => Name.GetHashCode();

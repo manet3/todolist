@@ -5,31 +5,26 @@ namespace ToDoList.Client
 {
     class Command : ICommand
     {
-        Action<object> _action;
-        Func<bool> _callable;
+        Action<object> _execute;
+        Func<bool> _canExecute;
 
         public event EventHandler CanExecuteChanged;
 
-        public Command(Action<object> handler)
-            => _action = handler;
+        public Command(Action<object> execute, Func<bool> canExecute = default)
+        {
+            if (execute == null)
+                throw new ArgumentNullException(nameof(execute));
 
-        public Command(Action<object> handler, Func<bool> callable) : this(handler)
-            => _callable = callable;
+            (_execute, _canExecute) = (execute, canExecute);
+        }
 
         public void RaiseExecuteChanged()
             => CanExecuteChanged?.Invoke(this, new EventArgs());
 
         public bool CanExecute(object parameter)
-        {
-            if (_callable != null)
-                return _callable();
-            return true;
-        }
+            => _canExecute?.Invoke() ?? true;
 
         public void Execute(object parameter)
-        {
-            if (CanExecute(parameter))
-                _action(parameter);
-        }
+            => _execute(parameter);
     }
 }
