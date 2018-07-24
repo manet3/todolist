@@ -26,9 +26,9 @@ namespace ToDoList.Server.Database
         private void DbInit()
         {
             //open db connection
-            dbConn = (new OrmLiteConnectionFactory(
+            dbConn = new OrmLiteConnectionFactory(
                 "~/App_Data/todoDB.sqlite".MapHostAbsolutePath(),
-                SqliteDialect.Provider))
+                SqliteDialect.Provider)
                 .Open();
 
             //create db table
@@ -48,7 +48,7 @@ namespace ToDoList.Server.Database
 
                 () => dbConn.Exists<ItemDbModel>(new { Name = item.Name })
                 ? Result.Fail("This item already exists.")
-                :Result.Ok(dbConn.Insert(item)),
+                : Result.Ok(dbConn.Insert(item)),
 
                 "Could not add item to DB.");
 
