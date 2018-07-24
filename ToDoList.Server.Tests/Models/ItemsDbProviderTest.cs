@@ -25,7 +25,7 @@ namespace ToDoList.Server.Tests.Models
         [TestInitialize]
         public void DbInitialize()
         {
-            _dbFactory = new OrmLiteConnectionFactory(ItemsDbProvider.DbFilePath);
+            _dbFactory = new OrmLiteConnectionFactory(ToDoItemsLiteRepository.DbFilePath);
             using (var dbConn = _dbFactory.Open())
                 dbConn.CreateTable(modelType: typeof(ItemDbModel), overwrite: true);
         }
@@ -46,7 +46,7 @@ namespace ToDoList.Server.Tests.Models
             using (var dbConn = _dbFactory.Open())
             {
                 //act
-                var res = ItemsDbProvider.DBRewrite(_testSet);
+                var res = ToDoItemsLiteRepository.DBRewrite(_testSet);
                 var gotItems = GetComarableCollection(dbConn.Select<ItemDbModel>());
                 //assert
                 res.IsSuccess.Should().BeTrue();
@@ -64,7 +64,7 @@ namespace ToDoList.Server.Tests.Models
                 dbConn.DeleteAll<ItemDbModel>();
                 dbConn.InsertAll(_testSet);
                 //act
-                var res = ItemsDbProvider.GetDBItems();
+                var res = ToDoItemsLiteRepository.GetDBItems();
                 //assert
                 res.IsSuccess.Should().BeTrue();
                 GetComarableCollection(res.Value).Should()
@@ -86,7 +86,7 @@ namespace ToDoList.Server.Tests.Models
                 new ItemDbModel { Name = "Test item 2" } };
 
                 //act
-                var res = ItemsDbProvider.TryRemoveDBItem("Test item 1");
+                var res = ToDoItemsLiteRepository.TryRemoveDBItem("Test item 1");
                 var checkItems = GetComarableCollection(dbConn.Select<ItemDbModel>());
 
                 //assert
@@ -104,7 +104,7 @@ namespace ToDoList.Server.Tests.Models
                 dbConn.DeleteAll<ItemDbModel>();
                 //act
                 dbConn.Insert(new ItemDbModel { Name = "Test item" });
-                var res = ItemsDbProvider.DBUpdateItem(new ItemDbModel { Name = "Test item 1", IsChecked = true });
+                var res = ToDoItemsLiteRepository.DBUpdateItem(new ItemDbModel { Name = "Test item 1", IsChecked = true });
                 var checkItems = GetComarableCollection(dbConn.Select<ItemDbModel>());
                 //assert
                 res.IsFailure.Should().BeFalse();
@@ -123,7 +123,7 @@ namespace ToDoList.Server.Tests.Models
                 dbConn.Insert(item);
                 //act
                 item.IsChecked = true;
-                var res = ItemsDbProvider.AddToDB(item);
+                var res = ToDoItemsLiteRepository.AddToDB(item);
                 //assert
                 res.IsFailure.Should().BeTrue("should throw {}", res.Error);
             }
