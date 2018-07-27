@@ -66,7 +66,7 @@ namespace ToDoList.Server.Controllers
         }
 
         [HttpDelete]
-        public void Delete(string name)
+        public void Remove(string name)
         {
             ThrowIfDbNotExists();
 
