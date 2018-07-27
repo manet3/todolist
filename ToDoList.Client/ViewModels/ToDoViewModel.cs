@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using System.Linq;
+using ToDoList.Shared;
 
 namespace ToDoList.Client.ViewModels
 {
@@ -30,13 +30,13 @@ namespace ToDoList.Client.ViewModels
         private const string MESSAGE_CLEAR = "";
         private const string MESSAGE_DUPLICATION = "Doing the same task twice is unproductive.";
 
-        public ObservableCollection<ToDoItemModel> ToDoItems { get; }
+        public ObservableCollection<ToDoItem> ToDoItems { get; }
 
-        private HashSet<ToDoItemModel> _itemsData = new HashSet<ToDoItemModel>();
+        private HashSet<ToDoItem> _itemsData = new HashSet<ToDoItem>();
 
         public ToDoViewModel()
         {
-            ToDoItems = new ObservableCollection<ToDoItemModel>();
+            ToDoItems = new ObservableCollection<ToDoItem>();
 
             AddCommand = new Command(ToDoAdd, CantoDoAdd);
             RemoveCommand = new Command(ToDoRemove);
@@ -50,7 +50,7 @@ namespace ToDoList.Client.ViewModels
 
         private void ToDoAdd(object obj)
         {
-            var newItem = new ToDoItemModel { Name = ToDoItemText.Trim(), IsChecked = false };
+            var newItem = new ToDoItem { Name = ToDoItemText.Trim(), IsChecked = false };
 
             if (_itemsData.Add(newItem))
             {
@@ -70,7 +70,7 @@ namespace ToDoList.Client.ViewModels
         private void ToDoRemove(object obj)
         {
             var selectedItems = (IList)obj;
-            var selectedArray = new ToDoItemModel[selectedItems.Count];
+            var selectedArray = new ToDoItem[selectedItems.Count];
 
             selectedItems.CopyTo(selectedArray, 0);
 
