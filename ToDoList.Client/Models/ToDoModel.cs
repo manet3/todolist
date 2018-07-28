@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using ToDoList.Client.DataServices;
@@ -18,17 +19,17 @@ namespace ToDoList.Client.Models
         public ToDoModel()
             => _sync = Synchronisator.SyncInit();
 
-        public async Task<Result> AddAsync(ToDoItem item)
-            => HandleRes(await _sync.AddAsync(item));
+        public async Task<Result<HttpResponseMessage>> AddAsync(ToDoItem item)
+            => HandleRes(await _sync.SendRequestAsync(item, ApiAction.Add));
 
-        public async Task<Result> DeleteAsync(ToDoItem item) 
-            => HandleRes(await _sync.DeleteItemAsync(item));
+        public async Task<Result<HttpResponseMessage>> DeleteByNameAsync(string name) 
+            => HandleRes(await _sync.SendRequestAsync(name, ApiAction.Delete));
 
-        public async Task<Result> UpdateAsync(ToDoItem item) 
-            => HandleRes(await _sync.ChangeAsync(item));
+        public async Task<Result<HttpResponseMessage>> UpdateAsync(ToDoItem item) 
+            => HandleRes(await _sync.SendRequestAsync(item, ApiAction.Change));
 
-        public async Task<Result> UpdateAllAsync(IEnumerable<ToDoItem> items) 
-            => HandleRes(await _sync.ChangeAsync(items));
+        public async Task<Result<HttpResponseMessage>> UpdateAllAsync(IEnumerable<ToDoItem> items) 
+            => HandleRes(await _sync.SendRequestAsync(items, ApiAction.Rewrite));
 
         public async Task<Result<IEnumerable<ToDoItem>>> GetAsync()
             => HandleRes(await _sync.GetTasksAsync());

@@ -60,24 +60,29 @@ namespace ToDoList.Client.ViewModels
             RemoveCommand = new Command(ToDoRemoveItems);
             ChangeCommand = new Command(SendChangeItem);
             FinishingCommand = new Command(SaveOnFinishing);
+            SyncRetryCommand = new Command(SyncRetry);
 
             GetListAsync();
         }
 
         private async void GetListAsync()
         {
-            var resTask = _model.GetAsync();
-
-            if (!resTask.IsCompleted)
-                LoaderState = LoadingState.Started;
-
-            var res = await resTask;
-
-            ShowResMessage(res);
-
-            if (res.IsSuccess)
-                ToDoItems = new ObservableCollection<ToDoItem>(res.Value);
+            var res = await DisplaySync(_model.GetAsync());
+            if (res != null)
+                ToDoItems = new ObservableCollection<ToDoItem>(res);
         }
+
+        #region Restart
+        public Command SyncRetryCommand { get; set; }
+
+        private async void SyncRetry(object obj)
+        {
+            if (ToDoItems.Count == 0)
+                GetListAsync();
+            else
+                await DisplaySync(_model.UpdateAllAsync(ToDoItems));
+        }
+        #endregion
 
         #region Add item
         public Command AddCommand { get; set; }
@@ -99,7 +104,7 @@ namespace ToDoList.Client.ViewModels
                 ShowTemporalMessageAsync(MESSAGE_DUPLICATION);
             }
 
-            ShowResMessage(await _model.AddAsync(newItem));
+            await DisplaySync(_model.AddAsync(newItem));
         }
         #endregion
 
@@ -107,7 +112,7 @@ namespace ToDoList.Client.ViewModels
         public Command ChangeCommand { get; set; }
 
         private async void SendChangeItem(object obj)
-            => ShowResMessage(await _model.UpdateAsync((ToDoItem)obj));
+            => await DisplaySync(_model.UpdateAsync((ToDoItem)obj));
         #endregion
 
         #region Remove items
@@ -130,13 +135,9 @@ namespace ToDoList.Client.ViewModels
         {
             foreach (var item in items)
             {
-                var res = await _model.DeleteAsync(item);
-                if (res.IsFailure)
-                {
-                    NotificationMessage = res.Error;
+                await DisplaySync(_model.DeleteByNameAsync(item.Name));
+                if (LoaderState == LoadingState.Failed)
                     return;
-                }
-                NotificationMessage = string.Empty;
             }
         }
         #endregion
@@ -148,10 +149,21 @@ namespace ToDoList.Client.ViewModels
             => _model.SaveIfNotSynchronised();
         #endregion
 
-        private void ShowResMessage(Result res)
-            => (NotificationMessage, LoaderState) = res.IsFailure
-                ? (res.Error, LoadingState.Failed)
-                : (string.Empty, LoadingState.None);
+        private async Task<T> DisplaySync<T>(Task<Result<T>> task)
+        {
+            if (!task.IsCompleted)
+                LoaderState = LoadingState.Started;
+
+            var res = await task;
+
+            if (res.IsFailure)
+            {
+                (NotificationMessage, LoaderState) = (res.Error, LoadingState.Failed);
+                return default;
+            }
+            (NotificationMessage, LoaderState) = (string.Empty, LoadingState.None);
+            return res.Value;
+        }
 
         private async void ShowTemporalMessageAsync(string message)
         {

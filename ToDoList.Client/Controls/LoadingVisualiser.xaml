@@ -61,6 +61,7 @@
     </UserControl.Resources>
 
     <Grid>
+        
         <ItemsControl ItemsSource="{Binding Particles, 
         RelativeSource={RelativeSource AncestorType=UserControl}}">
             <ItemsControl.ItemsPanel>
@@ -69,7 +70,9 @@
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
         </ItemsControl>
+        
         <StackPanel Orientation="Horizontal">
+            
             <Button Foreground="SlateGray" 
                 Command="{Binding RestartButtonPressed, 
             RelativeSource={RelativeSource AncestorType=UserControl}}" 
@@ -77,6 +80,7 @@
                 RenderTransformOrigin="0.5,0.5"
                 Height="22" Width="60"
                 HorizontalAlignment="Left">Try again
+                
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Border Name="btBorder" Background="White" 
@@ -115,15 +119,20 @@
                 FontWeight="SemiBold"
                 Foreground="Gray"
                 Margin="5,0,0,0"
-                IsChecked="{Binding AutoRestart, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                IsChecked="{Binding AutoRestartActive,
+                RelativeSource={RelativeSource AncestorType=UserControl}}">
+                
                 <ToggleButton.Template>
                     <ControlTemplate TargetType="ToggleButton">
+                        
                         <Border Name="btBorder" BorderBrush="Gray" 
                                 BorderThickness="2" Background="White" Height="Auto" Width="Auto">
                             <ContentPresenter Name="btContent" 
                                               ContentStringFormat="Restast in {0} sec (Cancel)"
-                                              Content="{Binding RetryAfterSec, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                              Content="{Binding RetryAfterSec,
+                                RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                         </Border>
+                        
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="false">
                                 <Setter TargetName="btBorder" Property="BorderBrush" Value="Transparent"/>
@@ -133,28 +142,22 @@
                                 <Setter TargetName="btContent" Property="Content" Value="Auto sync stopped"></Setter>
                             </Trigger>
                         </ControlTemplate.Triggers>
+                        
                     </ControlTemplate>
                 </ToggleButton.Template>
+
                 <ToggleButton.Style>
                     <Style TargetType="ToggleButton">
                         <Style.Triggers>
-                            <MultiDataTrigger >
-                                <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding RetryAfterSec, 
-                                        RelativeSource={RelativeSource AncestorType=UserControl}}" Value="0"/>
-                                    <Condition Binding="{Binding AutoRestartAllowed, 
-                                        RelativeSource={RelativeSource AncestorType=UserControl}}" Value="true"/>
-                                </MultiDataTrigger.Conditions>
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                            </MultiDataTrigger>
-                            <DataTrigger Binding="{Binding AutoRestartAllowed, 
-                                        RelativeSource={RelativeSource AncestorType=UserControl}}" Value="false">
+                            <DataTrigger  Binding="{Binding RetryAfterSec, 
+                                        RelativeSource={RelativeSource AncestorType=UserControl}}" Value="0">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </ToggleButton.Style>
             </ToggleButton>
+            
         </StackPanel>
     </Grid>
 </UserControl>

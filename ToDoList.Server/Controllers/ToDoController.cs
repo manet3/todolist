@@ -51,14 +51,14 @@ namespace ToDoList.Server.Controllers
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
         }
 
-        [HttpPatch]
+        [HttpPut, HttpPatch]
         public void Change(ToDoItem item)
         {
             ThrowIfDbNotExists();
 
             OnNullThrowArgumentException(item);
 
-            var result = ItemsDbProvider.AddToDB(Mapper.Map<ItemDbModel>(item));
+            var result = ItemsDbProvider.DBUpdateItem(Mapper.Map<ItemDbModel>(item));
 
             if (result.IsFailure)
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);

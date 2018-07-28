@@ -35,19 +35,16 @@ namespace ToDoList.Client.DataServices
             else return null;
         }
 
-        public async Task<Result<HttpResponseMessage>> ChangeAsync(IEnumerable<ToDoItem> items)
-            => await SendRequestAsync(items, ApiAction.Change);
+        private HttpRequestMessage ConfigureMessage<T>(T body, ApiAction method)
+            => new HttpRequestMessage(method.Method, new Uri(http, method.Name))
+            {
+                Content = new StringContent(
+                      JsonConvert.SerializeObject(body)
+                      , Encoding.UTF8
+                      , "application/json")
+            };
 
-        public async Task<Result<HttpResponseMessage>> ChangeAsync(ToDoItem item)
-            => await SendRequestAsync(item, ApiAction.Change);
-
-        public async Task<Result<HttpResponseMessage>> AddAsync(ToDoItem item)
-            => await SendRequestAsync(item, ApiAction.Add);
-
-        public async Task<Result<HttpResponseMessage>> DeleteItemAsync(ToDoItem item)
-            => await SendRequestAsync(item.Name, ApiAction.Delete);
-
-        private async Task<Result<HttpResponseMessage>> SendRequestAsync<T>(T body, ApiAction action)
+        public async Task<Result<HttpResponseMessage>> SendRequestAsync<T>(T body, ApiAction action)
             => await RequestExceptionsHandle(async () =>
             {
                 using (var client = new HttpClient { Timeout = WaitingTime })
@@ -64,15 +61,6 @@ namespace ToDoList.Client.DataServices
                     return Result.Fail<HttpResponseMessage>(GetResponseRepresentation(res));
                 }
             });
-
-        private HttpRequestMessage ConfigureMessage<T>(T body, ApiAction method)
-            => new HttpRequestMessage(method.Method, new Uri(http, method.Name))
-            {
-                Content = new StringContent(
-                      JsonConvert.SerializeObject(body)
-                      , Encoding.UTF8
-                      , "application/json")
-            };
 
         public async Task<Result<IEnumerable<ToDoItem>>> GetTasksAsync()
             => await RequestExceptionsHandle(async () =>
@@ -109,6 +97,6 @@ namespace ToDoList.Client.DataServices
         }
 
         private string GetResponseRepresentation(HttpResponseMessage message)
-            => $"Error {(int)message.StatusCode}: {message.ReasonPhrase}.";
+            => $"Error {(int)message.StatusCode}: {message.ReasonPhrase}";
     }
 }

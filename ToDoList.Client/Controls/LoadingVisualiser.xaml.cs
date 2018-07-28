@@ -1,18 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
@@ -30,13 +22,13 @@ namespace ToDoList.Client.Controls
     /// </summary>
     public partial class LoadingVisualiser : UserControl, INotifyPropertyChanged
     {
+        private const int PARTICLES_NUMBER = 5;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public static readonly DependencyProperty ActiveStateProperty;
 
         public static readonly DependencyProperty RestartButtonPressedProperty;
-
-        public static readonly DependencyProperty AutoRestartAllowedProperty;
 
         public LoadingState ActiveState
         {
@@ -50,14 +42,9 @@ namespace ToDoList.Client.Controls
             set => SetValue(RestartButtonPressedProperty, value);
         }
 
-        public bool AutoRestartAllowed
-        {
-            get => (bool)GetValue(AutoRestartAllowedProperty);
-            set => SetValue(AutoRestartAllowedProperty, value);
-        }
-
         public ObservableCollection<Ellipse> Particles { get; set; }
 
+        int _retryAfterSec;
         public int RetryAfterSec
         {
             get => _retryAfterSec;
@@ -68,7 +55,8 @@ namespace ToDoList.Client.Controls
             }
         }
 
-        public bool AutoRestart
+        bool _autoRestart;
+        public bool AutoRestartActive
         {
             get => _autoRestart;
             set
@@ -76,15 +64,9 @@ namespace ToDoList.Client.Controls
                 _autoRestart = value;
                 if (_autoRestart)
                     RestartActivate();
-                OnPropertyChanged(nameof(AutoRestart));
+                OnPropertyChanged(nameof(AutoRestartActive));
             }
         }
-
-        int _retryAfterSec;
-        bool _autoRestart;
-
-
-        public int ParticlesNumber = 5;
 
         static LoadingVisualiser()
         {
@@ -99,22 +81,43 @@ namespace ToDoList.Client.Controls
                 "RestartButtonPressed",
                 typeof(ICommand),
                 typeof(LoadingVisualiser));
-
-            AutoRestartAllowedProperty = DependencyProperty.Register(
-                "AutoRestartAllowed",
-                typeof(bool),
-                typeof(LoadingVisualiser),
-                new FrameworkPropertyMetadata(false, 
-                new PropertyChangedCallback(OnAutoRestartActivated))
-                );
         }
 
-        private static void OnAutoRestartActivated(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        public LoadingVisualiser()
         {
-            ((LoadingVisualiser)d).AutoRestart = false;
+            InitializeComponent();
+            Particles = new ObservableCollection<Ellipse>();
         }
 
-        private async Task RestartActivate()
+        private static void OnActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var obj = (LoadingVisualiser)d;
+
+            var newState = (LoadingState)e.NewValue;
+
+            if (newState == (LoadingState)e.OldValue)
+                return;
+
+            switch (newState)
+            {
+                case LoadingState.Started:
+                    obj.AddParticles();
+                    obj.AutoRestartActive = false;
+                    break;
+                case LoadingState.Failed:
+                    obj.RemoveParticles();
+                    obj.AutoRestartActive = true;
+                    break;
+                case LoadingState.None:
+                    obj.RemoveParticles();
+                    obj.AutoRestartActive = false;
+                    break;
+            }
+
+            obj.OnPropertyChanged(nameof(ActiveState));
+        }
+
+        private async void RestartActivate()
         {
             for (int i = 10; i >= 0; i--)
             {
@@ -122,37 +125,9 @@ namespace ToDoList.Client.Controls
                 await Task.Delay(new TimeSpan(0, 0, 1));
 
                 //when canceled
-                if (!AutoRestart) return;
+                if (!AutoRestartActive) return;
             }
-            RestartButtonPressed.Execute(null);
-        }
-
-        private static void OnActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var obj = (LoadingVisualiser)d;
-
-            if ((LoadingState)e.NewValue == (LoadingState)e.OldValue)
-                return;
-
-            if ((LoadingState)e.NewValue == LoadingState.Started)
-            {
-                obj.AddParticles();
-                obj.AutoRestart = false;
-            }
-            else
-            {
-                obj.RemoveParticles();
-                if (obj.AutoRestartAllowed)
-                    obj.AutoRestart = true;
-            }
-
-            obj.OnPropertyChanged(nameof(ActiveState));
-        }
-
-        public LoadingVisualiser()
-        {
-            InitializeComponent();
-            Particles = new ObservableCollection<Ellipse>();
+            RestartButtonPressed.Execute(this);
         }
 
         private void AddParticles()
@@ -168,7 +143,7 @@ namespace ToDoList.Client.Controls
             {
                 Particles.Add(new Ellipse());
                 counter++;
-                if (counter == ParticlesNumber)
+                if (counter == PARTICLES_NUMBER)
                     timer.Stop();
             };
 

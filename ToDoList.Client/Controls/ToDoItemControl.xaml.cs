@@ -22,7 +22,7 @@ namespace ToDoList.Client.Controls
         {
             ItemChangedCommandProperty = DependencyProperty.Register(
                 "ItemChangedCommand", typeof(ICommand), typeof(ToDoItemControl),
-                new FrameworkPropertyMetadata(new PropertyChangedCallback(CommandAssignedCallback)));
+                new FrameworkPropertyMetadata(new PropertyChangedCallback(CommandAssignedCallback))); 
         }
 
         public ToDoItemControl()

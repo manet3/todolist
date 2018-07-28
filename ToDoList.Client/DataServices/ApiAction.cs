@@ -2,7 +2,7 @@
 
 namespace ToDoList.Client.DataServices
 {
-    class ApiAction
+    public class ApiAction
     {
         public HttpMethod Method;
         public string Name;
@@ -13,6 +13,8 @@ namespace ToDoList.Client.DataServices
         public static ApiAction List = new ApiAction(HttpMethod.Get, "list");
 
         public static ApiAction Change = new ApiAction(HttpMethod.Put, "change");
+
+        public static ApiAction Rewrite = new ApiAction(HttpMethod.Put, "rewrite");
 
         public static ApiAction Add = new ApiAction(HttpMethod.Post, "add");
 
