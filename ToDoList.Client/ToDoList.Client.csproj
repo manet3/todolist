@@ -72,6 +72,7 @@
     <Compile Include="Controls\ToDoItemControl.xaml.cs">
       <DependentUpon>ToDoItemControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\LoaderViewModel.cs" />
     <Compile Include="DataServices\ApiAction.cs" />
     <Compile Include="DataServices\Synchronisator.cs" />
     <Compile Include="Models\ToDoModel.cs" />

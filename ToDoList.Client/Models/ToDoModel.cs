@@ -22,13 +22,13 @@ namespace ToDoList.Client.Models
         public async Task<Result<HttpResponseMessage>> AddAsync(ToDoItem item)
             => HandleRes(await _sync.SendRequestAsync(item, ApiAction.Add));
 
-        public async Task<Result<HttpResponseMessage>> DeleteByNameAsync(string name) 
+        public async Task<Result<HttpResponseMessage>> DeleteByNameAsync(string name)
             => HandleRes(await _sync.SendRequestAsync(name, ApiAction.Delete));
 
-        public async Task<Result<HttpResponseMessage>> UpdateAsync(ToDoItem item) 
+        public async Task<Result<HttpResponseMessage>> UpdateAsync(ToDoItem item)
             => HandleRes(await _sync.SendRequestAsync(item, ApiAction.Change));
 
-        public async Task<Result<HttpResponseMessage>> UpdateAllAsync(IEnumerable<ToDoItem> items) 
+        public async Task<Result<HttpResponseMessage>> UpdateAllAsync(IEnumerable<ToDoItem> items)
             => HandleRes(await _sync.SendRequestAsync(items, ApiAction.Rewrite));
 
         public async Task<Result<IEnumerable<ToDoItem>>> GetAsync()

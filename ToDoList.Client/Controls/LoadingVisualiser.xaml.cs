@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Shapes;
-using System.Windows.Threading;
+using ToDoList.Client.ViewModels;
 
 namespace ToDoList.Client.Controls
 {
@@ -22,8 +18,6 @@ namespace ToDoList.Client.Controls
     /// </summary>
     public partial class LoadingVisualiser : UserControl, INotifyPropertyChanged
     {
-        private const int PARTICLES_NUMBER = 5;
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public static readonly DependencyProperty ActiveStateProperty;
@@ -42,122 +36,62 @@ namespace ToDoList.Client.Controls
             set => SetValue(RestartButtonPressedProperty, value);
         }
 
-        public ObservableCollection<Ellipse> Particles { get; set; }
-
-        int _retryAfterSec;
-        public int RetryAfterSec
-        {
-            get => _retryAfterSec;
-            set
-            {
-                _retryAfterSec = value;
-                OnPropertyChanged(nameof(RetryAfterSec));
-            }
-        }
-
-        bool _autoRestart;
-        public bool AutoRestartActive
-        {
-            get => _autoRestart;
-            set
-            {
-                _autoRestart = value;
-                if (_autoRestart)
-                    RestartActivate();
-                OnPropertyChanged(nameof(AutoRestartActive));
-            }
-        }
-
         static LoadingVisualiser()
         {
             ActiveStateProperty = DependencyProperty.Register(
-                "ActiveState", 
-                typeof(LoadingState), 
+                "ActiveState",
+                typeof(LoadingState),
                 typeof(LoadingVisualiser),
-                new FrameworkPropertyMetadata(LoadingState.None, 
+                new FrameworkPropertyMetadata(LoadingState.None,
                 new PropertyChangedCallback(OnActiveChanged)));
 
             RestartButtonPressedProperty = DependencyProperty.Register(
                 "RestartButtonPressed",
                 typeof(ICommand),
-                typeof(LoadingVisualiser));
+                typeof(LoadingVisualiser),
+                new FrameworkPropertyMetadata(new PropertyChangedCallback(RestartCommandChanged)));
         }
 
-        public LoadingVisualiser()
+        private static void RestartCommandChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            InitializeComponent();
-            Particles = new ObservableCollection<Ellipse>();
+            var viewModel = (LoaderViewModel)((LoadingVisualiser)d).MainGrid.DataContext;
+            viewModel.RestartCommand = (ICommand)e.NewValue;
         }
 
+        //in case of setting Datacontext of the controll 
+        //this method will not be called ))
         private static void OnActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var obj = (LoadingVisualiser)d;
-
             var newState = (LoadingState)e.NewValue;
 
             if (newState == (LoadingState)e.OldValue)
                 return;
 
+            var viewModel = (LoaderViewModel)((LoadingVisualiser)d).MainGrid.DataContext;
+
             switch (newState)
             {
                 case LoadingState.Started:
-                    obj.AddParticles();
-                    obj.AutoRestartActive = false;
+                    viewModel.AddParticles();
+                    viewModel.AutoRestartActive = false;
                     break;
                 case LoadingState.Failed:
-                    obj.RemoveParticles();
-                    obj.AutoRestartActive = true;
+                    viewModel.RemoveParticles();
+                    viewModel.AutoRestartActive = true;
                     break;
                 case LoadingState.None:
-                    obj.RemoveParticles();
-                    obj.AutoRestartActive = false;
+                    viewModel.RemoveParticles();
+                    viewModel.AutoRestartActive = false;
                     break;
             }
 
-            obj.OnPropertyChanged(nameof(ActiveState));
+            var obj = (LoadingVisualiser)d;
+            obj.PropertyChanged?.Invoke(obj,
+                new PropertyChangedEventArgs(nameof(obj.ActiveState)));
         }
 
-        private async void RestartActivate()
-        {
-            for (int i = 10; i >= 0; i--)
-            {
-                RetryAfterSec = i;
-                await Task.Delay(new TimeSpan(0, 0, 1));
+        public LoadingVisualiser()
+            => InitializeComponent();
 
-                //when canceled
-                if (!AutoRestartActive) return;
-            }
-            RestartButtonPressed.Execute(this);
-        }
-
-        private void AddParticles()
-        {
-            DispatcherTimer timer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(300)
-            };
-
-            var counter = 0;
-
-            timer.Tick += (s, a) =>
-            {
-                Particles.Add(new Ellipse());
-                counter++;
-                if (counter == PARTICLES_NUMBER)
-                    timer.Stop();
-            };
-
-            timer.Start();
-        }
-
-        private void RemoveParticles()
-        {
-            Particles.Clear();
-        }
-
-        public void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-        }
     }
 }

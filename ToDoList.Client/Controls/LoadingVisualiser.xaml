@@ -3,9 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewmodels="clr-namespace:ToDoList.Client.ViewModels"
              mc:Ignorable="d" 
              Name="loadingControl"
              d:DesignHeight="300" d:DesignWidth="300">
+    
     <UserControl.Style>
         <Style TargetType="UserControl">
             <Style.Triggers>
@@ -60,10 +62,12 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid>
+    <Grid Name="MainGrid">
+        <Grid.DataContext>
+            <viewmodels:LoaderViewModel/>
+        </Grid.DataContext>
         
-        <ItemsControl ItemsSource="{Binding Particles, 
-        RelativeSource={RelativeSource AncestorType=UserControl}}">
+        <ItemsControl ItemsSource="{Binding Particles}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <Canvas Width="200" Height="10"/>
@@ -119,8 +123,7 @@
                 FontWeight="SemiBold"
                 Foreground="Gray"
                 Margin="5,0,0,0"
-                IsChecked="{Binding AutoRestartActive,
-                RelativeSource={RelativeSource AncestorType=UserControl}}">
+                IsChecked="{Binding AutoRestartActive}">
                 
                 <ToggleButton.Template>
                     <ControlTemplate TargetType="ToggleButton">
@@ -129,8 +132,7 @@
                                 BorderThickness="2" Background="White" Height="Auto" Width="Auto">
                             <ContentPresenter Name="btContent" 
                                               ContentStringFormat="Restast in {0} sec (Cancel)"
-                                              Content="{Binding RetryAfterSec,
-                                RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                              Content="{Binding RetryAfterSec}"/>
                         </Border>
                         
                         <ControlTemplate.Triggers>
@@ -149,8 +151,7 @@
                 <ToggleButton.Style>
                     <Style TargetType="ToggleButton">
                         <Style.Triggers>
-                            <DataTrigger  Binding="{Binding RetryAfterSec, 
-                                        RelativeSource={RelativeSource AncestorType=UserControl}}" Value="0">
+                            <DataTrigger  Binding="{Binding RetryAfterSec}" Value="0">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                         </Style.Triggers>
