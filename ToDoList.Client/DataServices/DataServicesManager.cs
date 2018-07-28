@@ -1,22 +1,19 @@
 ﻿using CSharpFunctionalExtensions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-using ToDoList.Client.DataServices;
 using ToDoList.Shared;
 
-namespace ToDoList.Client.Models
+namespace ToDoList.Client.DataServices
 {
-    class ToDoModel
+    class DataServicesManager
     {
         private bool _isSynchronised;
 
         private Synchronisator _sync;
 
-        public ToDoModel()
+        public DataServicesManager()
             => _sync = Synchronisator.SyncInit();
 
         public async Task<Result<HttpResponseMessage>> AddAsync(ToDoItem item)

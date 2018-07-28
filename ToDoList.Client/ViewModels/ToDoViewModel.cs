@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using ToDoList.Shared;
-using ToDoList.Client.Models;
+using ToDoList.Client.DataServices;
 using CSharpFunctionalExtensions;
 using ToDoList.Client.Controls;
 
@@ -49,12 +49,12 @@ namespace ToDoList.Client.ViewModels
 
         private HashSet<ToDoItem> _itemsData = new HashSet<ToDoItem>();
 
-        private ToDoModel _model;
+        private DataServicesManager _dataManager;
 
         public ToDoViewModel()
         {
             ToDoItems = new ObservableCollection<ToDoItem>();
-            _model = new ToDoModel();
+            _dataManager = new DataServicesManager();
 
             AddCommand = new Command(ToDoAdd, CanToAdd);
             RemoveCommand = new Command(ToDoRemoveItems);
@@ -67,7 +67,7 @@ namespace ToDoList.Client.ViewModels
 
         private async void GetListAsync()
         {
-            var res = await DisplaySync(_model.GetAsync());
+            var res = await DisplaySync(_dataManager.GetAsync());
             if (res != null)
                 ToDoItems = new ObservableCollection<ToDoItem>(res);
         }
@@ -80,7 +80,7 @@ namespace ToDoList.Client.ViewModels
             if (ToDoItems.Count == 0)
                 GetListAsync();
             else
-                await DisplaySync(_model.UpdateAllAsync(ToDoItems));
+                await DisplaySync(_dataManager.UpdateAllAsync(ToDoItems));
         }
         #endregion
 
@@ -104,7 +104,7 @@ namespace ToDoList.Client.ViewModels
                 ShowTemporalMessageAsync(MESSAGE_DUPLICATION);
             }
 
-            await DisplaySync(_model.AddAsync(newItem));
+            await DisplaySync(_dataManager.AddAsync(newItem));
         }
         #endregion
 
@@ -112,7 +112,7 @@ namespace ToDoList.Client.ViewModels
         public Command ChangeCommand { get; set; }
 
         private async void SendChangeItem(object obj)
-            => await DisplaySync(_model.UpdateAsync((ToDoItem)obj));
+            => await DisplaySync(_dataManager.UpdateAsync((ToDoItem)obj));
         #endregion
 
         #region Remove items
@@ -135,7 +135,7 @@ namespace ToDoList.Client.ViewModels
         {
             foreach (var item in items)
             {
-                await DisplaySync(_model.DeleteByNameAsync(item.Name));
+                await DisplaySync(_dataManager.DeleteByNameAsync(item.Name));
                 if (LoaderState == LoadingState.Failed)
                     return;
             }
@@ -146,7 +146,7 @@ namespace ToDoList.Client.ViewModels
         public Command FinishingCommand { get; set; }
 
         private void SaveOnFinishing(object obj)
-            => _model.SaveIfNotSynchronised();
+            => _dataManager.SaveIfNotSynchronised();
         #endregion
 
         private async Task<T> DisplaySync<T>(Task<Result<T>> task)
