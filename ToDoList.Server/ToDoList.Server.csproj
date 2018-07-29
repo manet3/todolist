@@ -203,7 +203,7 @@
     <Compile Include="Controllers\ToDoController.cs" />
     <Compile Include="Database\IToDoItemsRepository.cs" />
     <Compile Include="Database\ToDoItemsLiteRepository.cs" />
-    <Compile Include="Database\DbExceptionHandle.cs" />
+    <Compile Include="Database\DbExceptionHandler.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

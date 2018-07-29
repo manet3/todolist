@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using System.Collections.ObjectModel;
+using ServiceStack;
 
 namespace ToDoList.Server.Tests.Models
 {
@@ -27,10 +28,15 @@ namespace ToDoList.Server.Tests.Models
         [TestInitialize]
         public void DbInitialize()
         {
-            _dbFactory = new OrmLiteConnectionFactory("~/App_Data/todoDB.sqlite", SqliteDialect.Provider);
+            repository = new ToDoItemsLiteRepository();
+            repository.ConnectStorage();
+
+            _dbFactory = new OrmLiteConnectionFactory(
+                "~/App_Data/todoDB.sqlite".MapHostAbsolutePath()
+                , SqliteDialect.Provider);
+
             using (var dbConn = _dbFactory.Open())
                 dbConn.CreateTableIfNotExists<ItemDbModel>();
-            repository = new ToDoItemsLiteRepository();
         }
 
         [TestCleanup]
@@ -109,11 +115,11 @@ namespace ToDoList.Server.Tests.Models
                 dbConn.DeleteAll<ItemDbModel>();
                 //act
                 dbConn.Insert(new ItemDbModel { Name = "Test item" });
-                var res = repository.UpdateItem(new ItemDbModel { Name = "Test item 1", IsChecked = true });
+                var res = repository.UpdateItem(new ItemDbModel { Name = "Test item", IsChecked = true });
                 var checkItems = GetComarableCollection(dbConn.Select<ItemDbModel>());
                 //assert
                 res.IsFailure.Should().BeFalse();
-                checkItems.Should().Equal(new ToDoItem { Name = "Test item", IsChecked = true });
+                checkItems[0].IsChecked.Should().BeTrue();
             }
         }
 

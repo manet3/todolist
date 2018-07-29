@@ -1,10 +1,10 @@
 ﻿using CSharpFunctionalExtensions;
 using System;
+using System.Data.SqlClient;
 
 namespace ToDoList.Server.Database
 {
-    public class DbExceptionHandle<TdbException>
-        where TdbException : Exception
+    public class DbExceptionHandler
     {
         public Result<TResult> SqlExceptionHandler<TResult>(Func<Result<TResult>> func, string customErrorMessagePart)
             => SqlExceptionHandlerCommon(
@@ -20,14 +20,14 @@ namespace ToDoList.Server.Database
 
         private TResult SqlExceptionHandlerCommon<TResult>(
             Func<TResult> func,
-            Func<TdbException, TResult> errorReturn,
+            Func<SqlException, TResult> errorReturn,
             string customErrorMessagePart)
         {
             try
             {
                 return func.Invoke();
             }
-            catch (TdbException ex)
+            catch (SqlException ex)
             {
                 return errorReturn.Invoke(ex);
             }

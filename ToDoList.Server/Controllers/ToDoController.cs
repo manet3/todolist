@@ -17,6 +17,7 @@ namespace ToDoList.Server.Controllers
         public ToDoController(IToDoItemsRepository repository)
         {
             _repository = repository;
+            _repository.ConnectStorage();
         }
 
         [HttpGet]
@@ -58,7 +59,7 @@ namespace ToDoList.Server.Controllers
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
         }
 
-        [HttpPatch]
+        [HttpPut, HttpPatch]
         public void Change(ToDoItem item)
         {
             ThrowIfLiteDbNotExists();
@@ -93,9 +94,8 @@ namespace ToDoList.Server.Controllers
 
         private void ThrowIfLiteDbNotExists()
         {
-            if (_repository is ToDoItemsLiteRepository liteRepo
-                && liteRepo.TableCreation.IsFailure)
-                throw GetExceptionWith(liteRepo.TableCreation.Error, HttpStatusCode.ServiceUnavailable);
+            if (_repository.StorageConnection.IsFailure)
+                throw GetExceptionWith(_repository.StorageConnection.Error, HttpStatusCode.ServiceUnavailable);
         }
 
         private HttpResponseException GetExceptionWith(string reasonForFailure, HttpStatusCode statusCode)
