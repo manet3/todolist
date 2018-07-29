@@ -18,6 +18,6 @@ namespace ToDoList.Client.DataServices
 
         public static ApiAction Add = new ApiAction(HttpMethod.Post, "add");
 
-        public static ApiAction Delete = new ApiAction(HttpMethod.Delete, "remove");
+        public static ApiAction Delete = new ApiAction(HttpMethod.Delete, "delete");
     }
 }

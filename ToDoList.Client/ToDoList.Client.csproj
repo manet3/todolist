@@ -75,7 +75,7 @@
     <Compile Include="ViewModels\LoaderViewModel.cs" />
     <Compile Include="DataServices\ApiAction.cs" />
     <Compile Include="DataServices\Synchronisator.cs" />
-    <Compile Include="Models\ToDoModel.cs" />
+    <Compile Include="DataServices\DataServicesManager.cs" />
     <Compile Include="ViewModels\ToDoViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="Views\ToDoWindow.xaml.cs">
@@ -143,6 +143,8 @@
       <Name>ToDoList.Shared</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

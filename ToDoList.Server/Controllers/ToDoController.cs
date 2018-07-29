@@ -66,13 +66,13 @@ namespace ToDoList.Server.Controllers
         }
 
         [HttpDelete]
-        public void Remove(string name)
+        public void Delete(string id)
         {
             ThrowIfDbNotExists();
 
-            OnNullThrowArgumentException(name);
+            OnNullThrowArgumentException(id);
 
-            var result = ItemsDbProvider.TryRemoveDBItem(name);
+            var result = ItemsDbProvider.TryRemoveDBItem(id);
 
             if (result.IsFailure)
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);

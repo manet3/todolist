@@ -151,7 +151,9 @@
                 <ToggleButton.Style>
                     <Style TargetType="ToggleButton">
                         <Style.Triggers>
-                            <DataTrigger  Binding="{Binding RetryAfterSec}" Value="0">
+                            <DataTrigger Binding="{Binding ActiveState, 
+                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        Value="Started">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                         </Style.Triggers>
