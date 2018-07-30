@@ -68,8 +68,11 @@ namespace ToDoList.Client.ViewModels
         private async void GetListAsync()
         {
             var res = await DisplaySync(_dataManager.GetAsync());
+
             if (res != null)
                 ToDoItems = new ObservableCollection<ToDoItem>(res);
+            else
+                ToDoItems = new ObservableCollection<ToDoItem>(_dataManager.GetLocal());
         }
 
         #region Restart
@@ -146,7 +149,7 @@ namespace ToDoList.Client.ViewModels
         public Command FinishingCommand { get; set; }
 
         private void SaveOnFinishing(object obj)
-            => _dataManager.SaveIfNotSynchronised();
+            => _dataManager.SaveIfNotSynchronised(ToDoItems);
         #endregion
 
         private async Task<T> DisplaySync<T>(Task<Result<T>> task)

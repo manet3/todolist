@@ -1,5 +1,4 @@
 ﻿using CSharpFunctionalExtensions;
-using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -13,8 +12,13 @@ namespace ToDoList.Client.DataServices
 
         private Synchronisator _sync;
 
+        private LocalStorage _saver;
+
         public DataServicesManager()
-            => _sync = Synchronisator.SyncInit();
+        {
+            _sync = Synchronisator.SyncInit();
+            _saver = LocalStorage.InitStorage();
+        }
 
         public async Task<Result<HttpResponseMessage>> AddAsync(ToDoItem item)
             => HandleRes(await _sync.SendRequestAsync(item, ApiAction.Add));
@@ -31,17 +35,19 @@ namespace ToDoList.Client.DataServices
         public async Task<Result<IEnumerable<ToDoItem>>> GetAsync()
             => HandleRes(await _sync.GetTasksAsync());
 
+        public IEnumerable<ToDoItem> GetLocal()
+            => _saver.GetSessions();
+
         private Result<T> HandleRes<T>(Result<T> res)
         {
             _isSynchronised = !res.IsFailure;
             return res;
         }
 
-        public void SaveIfNotSynchronised()
+        public void SaveIfNotSynchronised(IEnumerable<ToDoItem> items)
         {
-            //Call writing to local json
             if (!_isSynchronised)
-                throw new NotImplementedException();
+                _saver.SaveSession(items);
         }
     }
 }

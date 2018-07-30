@@ -5,10 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewmodels="clr-namespace:ToDoList.Client.ViewModels"
         xmlns:controls="clr-namespace:ToDoList.Client.Controls"
+        xmlns:bechaviours="clr-namespace:ToDoList.Client.Bechaviours"
         mc:Ignorable="d"
         Title="ToDo" 
-        Height="400" Width="300" >
-    <!-- ="{Binding FinishingCommand}"-->
+        Height="400" Width="300"
+        bechaviours:WindowBechaviour.ClosingCommand="{Binding FinishingCommand}">
     <Window.DataContext>
         <viewmodels:ToDoViewModel/>
     </Window.DataContext>
