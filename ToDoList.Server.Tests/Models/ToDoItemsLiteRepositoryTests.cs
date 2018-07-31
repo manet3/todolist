@@ -7,12 +7,15 @@ using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using System.Collections.ObjectModel;
+using ServiceStack;
 
 namespace ToDoList.Server.Tests.Models
 {
     [TestClass]
-    public class ItemsDbProviderTests
+    public class ToDoItemsLiteRepositoryTests
     {
+        private ToDoItemsLiteRepository _repository;
+
         private ReadOnlyCollection<ItemDbModel> _testSet = new List<ItemDbModel>
         {
             new ItemDbModel { Name = "Test item" },
@@ -25,9 +28,15 @@ namespace ToDoList.Server.Tests.Models
         [TestInitialize]
         public void DbInitialize()
         {
-            _dbFactory = new OrmLiteConnectionFactory(ItemsDbProvider.DbFilePath);
+            _repository = new ToDoItemsLiteRepository();
+            _repository.ConnectStorage();
+
+            _dbFactory = new OrmLiteConnectionFactory(
+                "~/App_Data/todoDB.sqlite".MapHostAbsolutePath()
+                , SqliteDialect.Provider);
+
             using (var dbConn = _dbFactory.Open())
-                dbConn.CreateTable(modelType: typeof(ItemDbModel), overwrite: true);
+                dbConn.CreateTableIfNotExists<ItemDbModel>();
         }
 
         [TestCleanup]
@@ -35,6 +44,8 @@ namespace ToDoList.Server.Tests.Models
         {
             using (var dbConn = _dbFactory.Open())
                 dbConn.DropTable<ItemDbModel>();
+
+            _repository.Dispose();
         }
 
         private ToDoItem[] GetComarableCollection(IEnumerable<ItemDbModel> dbModels)
@@ -46,7 +57,7 @@ namespace ToDoList.Server.Tests.Models
             using (var dbConn = _dbFactory.Open())
             {
                 //act
-                var res = ItemsDbProvider.DBRewrite(_testSet);
+                var res = _repository.UpdateAll(_testSet);
                 var gotItems = GetComarableCollection(dbConn.Select<ItemDbModel>());
                 //assert
                 res.IsSuccess.Should().BeTrue();
@@ -64,7 +75,7 @@ namespace ToDoList.Server.Tests.Models
                 dbConn.DeleteAll<ItemDbModel>();
                 dbConn.InsertAll(_testSet);
                 //act
-                var res = ItemsDbProvider.GetDBItems();
+                var res = _repository.List();
                 //assert
                 res.IsSuccess.Should().BeTrue();
                 GetComarableCollection(res.Value).Should()
@@ -86,7 +97,7 @@ namespace ToDoList.Server.Tests.Models
                 new ItemDbModel { Name = "Test item 2" } };
 
                 //act
-                var res = ItemsDbProvider.TryRemoveDBItem("Test item 1");
+                var res = _repository.DeleteByName("Test item 1");
                 var checkItems = GetComarableCollection(dbConn.Select<ItemDbModel>());
 
                 //assert
@@ -104,11 +115,11 @@ namespace ToDoList.Server.Tests.Models
                 dbConn.DeleteAll<ItemDbModel>();
                 //act
                 dbConn.Insert(new ItemDbModel { Name = "Test item" });
-                var res = ItemsDbProvider.DBUpdateItem(new ItemDbModel { Name = "Test item 1", IsChecked = true });
+                var res = _repository.UpdateItem(new ItemDbModel { Name = "Test item", IsChecked = true });
                 var checkItems = GetComarableCollection(dbConn.Select<ItemDbModel>());
                 //assert
                 res.IsFailure.Should().BeFalse();
-                checkItems.Should().Equal(new ToDoItem { Name = "Test item", IsChecked = true });
+                checkItems[0].IsChecked.Should().BeTrue();
             }
         }
 
@@ -123,7 +134,7 @@ namespace ToDoList.Server.Tests.Models
                 dbConn.Insert(item);
                 //act
                 item.IsChecked = true;
-                var res = ItemsDbProvider.AddToDB(item);
+                var res = _repository.Add(item);
                 //assert
                 res.IsFailure.Should().BeTrue("should throw {}", res.Error);
             }

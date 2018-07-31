@@ -11,8 +11,6 @@ namespace ToDoList.Server
     {
         protected void Application_Start()
         {
-            ItemsDbProvider.CreateDbTable();
-
             AreaRegistration.RegisterAllAreas();
             GlobalConfiguration.Configure(WebApiConfig.Register);
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
