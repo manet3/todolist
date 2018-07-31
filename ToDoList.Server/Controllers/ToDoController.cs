@@ -12,12 +12,20 @@ namespace ToDoList.Server.Controllers
 {
     public class ToDoController : ApiController
     {
+        private IToDoItemsRepository _repository;
+
+        public ToDoController(IToDoItemsRepository repository)
+        {
+            _repository = repository;
+            _repository.ConnectStorage();
+        }
+
         [HttpGet]
         public IEnumerable<ToDoItem> List()
         {
-            ThrowIfDbNotExists();
+            ThrowIfLiteDbNotExists();
 
-            var result = ItemsDbProvider.GetDBItems();
+            var result = _repository.List();
 
             if (result.IsFailure)
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
@@ -28,11 +36,11 @@ namespace ToDoList.Server.Controllers
         [HttpPost]
         public void Add(ToDoItem item)
         {
-            ThrowIfDbNotExists();
+            ThrowIfLiteDbNotExists();
 
             OnNullThrowArgumentException(item);
 
-            var result = ItemsDbProvider.AddToDB(Mapper.Map<ItemDbModel>(item));
+            var result = _repository.Add(Mapper.Map<ItemDbModel>(item));
 
             if (result.IsFailure)
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
@@ -41,11 +49,11 @@ namespace ToDoList.Server.Controllers
         [HttpPut, HttpPatch]
         public void Rewrite(IEnumerable<ToDoItem> new_items)
         {
-            ThrowIfDbNotExists();
+            ThrowIfLiteDbNotExists();
 
             OnNullThrowArgumentException(new_items);
 
-            var result = ItemsDbProvider.DBRewrite(Mapper.Map<IEnumerable<ItemDbModel>>(new_items));
+            var result = _repository.UpdateAll(Mapper.Map<IEnumerable<ItemDbModel>>(new_items));
 
             if (result.IsFailure)
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
@@ -54,11 +62,11 @@ namespace ToDoList.Server.Controllers
         [HttpPut, HttpPatch]
         public void Change(ToDoItem item)
         {
-            ThrowIfDbNotExists();
+            ThrowIfLiteDbNotExists();
 
             OnNullThrowArgumentException(item);
 
-            var result = ItemsDbProvider.DBUpdateItem(Mapper.Map<ItemDbModel>(item));
+            var result = _repository.UpdateItem(Mapper.Map<ItemDbModel>(item));
 
             if (result.IsFailure)
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
@@ -68,11 +76,11 @@ namespace ToDoList.Server.Controllers
         [HttpDelete]
         public void Delete(string id)
         {
-            ThrowIfDbNotExists();
+            ThrowIfLiteDbNotExists();
 
             OnNullThrowArgumentException(id);
 
-            var result = ItemsDbProvider.TryRemoveDBItem(id);
+            var result = _repository.DeleteByName(id);
 
             if (result.IsFailure)
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
@@ -84,10 +92,10 @@ namespace ToDoList.Server.Controllers
                 throw GetExceptionWith("Failed to get client data.", HttpStatusCode.BadRequest);
         }
 
-        private void ThrowIfDbNotExists()
+        private void ThrowIfLiteDbNotExists()
         {
-            if (ItemsDbProvider.TableCreationResult.IsFailure)
-                throw GetExceptionWith(ItemsDbProvider.TableCreationResult.Error, HttpStatusCode.ServiceUnavailable);
+            if (_repository.StorageConnection.IsFailure)
+                throw GetExceptionWith(_repository.StorageConnection.Error, HttpStatusCode.ServiceUnavailable);
         }
 
         private HttpResponseException GetExceptionWith(string reasonForFailure, HttpStatusCode statusCode)
