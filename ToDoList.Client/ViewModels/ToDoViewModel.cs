@@ -7,6 +7,7 @@ using ToDoList.Shared;
 using ToDoList.Client.DataServices;
 using CSharpFunctionalExtensions;
 using ToDoList.Client.Controls;
+using System.Windows;
 
 namespace ToDoList.Client.ViewModels
 {
@@ -59,11 +60,15 @@ namespace ToDoList.Client.ViewModels
             AddCommand = new Command(ToDoAdd, CanToAdd);
             RemoveCommand = new Command(ToDoRemoveItems);
             ChangeCommand = new Command(SendChangeItem);
-            FinishingCommand = new Command(SaveOnFinishing);
             SyncRetryCommand = new Command(SyncRetry);
+
+            Application.Current.Exit += AppExit;
 
             GetListAsync();
         }
+
+        private void AppExit(object sender, ExitEventArgs e)
+            => _dataManager.SaveIfNotSynchronised(ToDoItems);
 
         private async void GetListAsync()
         {
@@ -143,13 +148,6 @@ namespace ToDoList.Client.ViewModels
                     return;
             }
         }
-        #endregion
-
-        #region Finishing
-        public Command FinishingCommand { get; set; }
-
-        private void SaveOnFinishing(object obj)
-            => _dataManager.SaveIfNotSynchronised(ToDoItems);
         #endregion
 
         private async Task<T> DisplaySync<T>(Task<Result<T>> task)
