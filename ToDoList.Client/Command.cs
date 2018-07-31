@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace ToDoList.Client
 {
-    class Command : ICommand
+    public class Command : ICommand
     {
         Action<object> _execute;
         Func<bool> _canExecute;

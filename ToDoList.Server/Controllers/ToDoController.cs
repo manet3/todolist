@@ -74,13 +74,13 @@ namespace ToDoList.Server.Controllers
         }
 
         [HttpDelete]
-        public void Delete(string name)
+        public void Delete(string id)
         {
             ThrowIfLiteDbNotExists();
 
-            OnNullThrowArgumentException(name);
+            OnNullThrowArgumentException(id);
 
-            var result = _repository.DeleteByName(name);
+            var result = _repository.DeleteByName(id);
 
             if (result.IsFailure)
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="ToDoList.Client.Controls.TaskControl"
+﻿<UserControl x:Class="ToDoList.Client.Controls.ToDoItemControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -9,9 +9,9 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <CheckBox Name="TaskCheck"
+        <CheckBox Name="TaskCheckBox"
                   Margin="5,5,5,5"
-                  IsChecked="{Binding IsChecked, Mode=TwoWay}" >
+                  IsChecked="{Binding IsChecked, Mode=TwoWay}">
             <CheckBox.Template>
                 <ControlTemplate TargetType="CheckBox">
                     <BulletDecorator Background="Transparent">
