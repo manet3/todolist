@@ -53,7 +53,7 @@ namespace ToDoList.Server.Controllers
 
             OnNullThrowArgumentException(new_items);
 
-            var result = _repository.UpdateAll(Mapper.Map<IEnumerable<ItemDbModel>>(new_items));
+            var result = _repository.UpdateAllForce(Mapper.Map<IEnumerable<ItemDbModel>>(new_items));
 
             if (result.IsFailure)
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);

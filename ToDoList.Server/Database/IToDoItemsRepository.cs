@@ -23,7 +23,7 @@ namespace ToDoList.Server.Database
 
         Result<IEnumerable<ItemDbModel>> List();
 
-        Result UpdateAll(IEnumerable<ItemDbModel> new_items);
+        Result UpdateAllForce(IEnumerable<ItemDbModel> new_items);
 
         Result UpdateItem(ItemDbModel item);
     }

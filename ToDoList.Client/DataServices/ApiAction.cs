@@ -14,8 +14,6 @@ namespace ToDoList.Client.DataServices
 
         public static ApiAction Change = new ApiAction(HttpMethod.Put, "change");
 
-        public static ApiAction Rewrite = new ApiAction(HttpMethod.Put, "rewrite");
-
         public static ApiAction Add = new ApiAction(HttpMethod.Post, "add");
 
         public static ApiAction Delete = new ApiAction(HttpMethod.Delete, "delete");

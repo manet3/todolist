@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using ToDoList.Client.Controls;
 
 namespace ToDoList.Client.ViewModels
 {
@@ -36,6 +37,25 @@ namespace ToDoList.Client.ViewModels
 
         public LoaderViewModel()
             => Particles = new ObservableCollection<Ellipse>();
+
+        public void ChangeLoadingState(LoadingState newLoaderState)
+        {
+            switch (newLoaderState)
+            {
+                case LoadingState.Started:
+                    AddParticles();
+                    AutoRestartActive = false;
+                    break;
+                case LoadingState.Failed:
+                    RemoveParticles();
+                    AutoRestartActive = true;
+                    break;
+                case LoadingState.None:
+                    RemoveParticles();
+                    AutoRestartActive = false;
+                    break;
+            }
+        }
 
         private async void RestartActivate()
         {

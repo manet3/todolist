@@ -1,4 +1,6 @@
 ﻿using ServiceStack.DataAnnotations;
+using System;
+
 namespace ToDoList.Server.Database.Models
 {
     public class ItemDbModel
@@ -8,6 +10,11 @@ namespace ToDoList.Server.Database.Models
 
         [Required, Unique]
         public string Name { get; set; }
+
         public bool IsChecked { get; set; }
+
+        [Required]
+        public DateTime TimeStamp { get; }
+
     }
 }

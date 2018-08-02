@@ -72,11 +72,12 @@
     <Compile Include="Controls\ToDoItemControl.xaml.cs">
       <DependentUpon>ToDoItemControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="DataServices\ListJsonSaver.cs" />
+    <Compile Include="DataServices\SavedSession.cs" />
+    <Compile Include="DataServices\SyncMemento.cs" />
     <Compile Include="ViewModels\LoaderViewModel.cs" />
     <Compile Include="DataServices\ApiAction.cs" />
-    <Compile Include="DataServices\Synchronisator.cs" />
-    <Compile Include="DataServices\DataServicesManager.cs" />
+    <Compile Include="DataServices\RequestSender.cs" />
+    <Compile Include="DataServices\Sync.cs" />
     <Compile Include="ViewModels\ToDoViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="Views\ToDoWindow.xaml.cs">

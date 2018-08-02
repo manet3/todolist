@@ -57,7 +57,7 @@ namespace ToDoList.Server.Tests.Models
             using (var dbConn = _dbFactory.Open())
             {
                 //act
-                var res = _repository.UpdateAll(_testSet);
+                var res = _repository.UpdateAllForce(_testSet);
                 var gotItems = GetComarableCollection(dbConn.Select<ItemDbModel>());
                 //assert
                 res.IsSuccess.Should().BeTrue();

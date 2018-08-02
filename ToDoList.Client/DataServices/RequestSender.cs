@@ -10,7 +10,7 @@ using CSharpFunctionalExtensions;
 
 namespace ToDoList.Client.DataServices
 {
-    public class Synchronisator
+    public class RequestSender
     {
         private Uri http;
 
@@ -18,19 +18,19 @@ namespace ToDoList.Client.DataServices
 
         private readonly TimeSpan WaitingTime = TimeSpan.FromSeconds(40);
 
-        private Synchronisator()
+        private RequestSender()
         {
             http = new Uri("http://localhost:51650/");
         }
 
         private static bool _isInitialised;
 
-        public static Synchronisator SyncInit()
+        public static RequestSender SyncInit()
         {
             if (!_isInitialised)
             {
                 _isInitialised = true;
-                return new Synchronisator();
+                return new RequestSender();
             }
             else return null;
         }
@@ -44,21 +44,21 @@ namespace ToDoList.Client.DataServices
                       , "application/json")
             };
 
-        public async Task<Result<HttpResponseMessage>> SendRequestAsync<T>(T body, ApiAction action)
+        public async Task<Result<object>> SendRequestAsync(ToDoItem item, ApiAction action)
             => await RequestExceptionsHandle(async () =>
             {
                 using (var client = new HttpClient { Timeout = WaitingTime })
                 {
                     var message = action == ApiAction.Delete
-                    ? new HttpRequestMessage(action.Method, new Uri(http, $"{action.Name}/{body}"))
-                    : ConfigureMessage(body, action);
+                    ? new HttpRequestMessage(action.Method, new Uri(http, $"{action.Name}/{item.Name}"))
+                    : ConfigureMessage(item, action);
 
                     var res = await client.SendAsync(message);
 
                     if (res.StatusCode == HttpStatusCode.NoContent)
-                        return Result.Ok(res);
+                        return Result.Ok<object>(res);
 
-                    return Result.Fail<HttpResponseMessage>(GetResponseRepresentation(res));
+                    return Result.Fail<object>(GetResponseErrorRepresentation(res));
                 }
             });
 
@@ -76,7 +76,7 @@ namespace ToDoList.Client.DataServices
                           return Result.Ok(resValue);
                       }
 
-                      return Result.Fail<IEnumerable<ToDoItem>>(GetResponseRepresentation(res));
+                      return Result.Fail<IEnumerable<ToDoItem>>(GetResponseErrorRepresentation(res));
                   }
               });
 
@@ -96,7 +96,7 @@ namespace ToDoList.Client.DataServices
             }
         }
 
-        private string GetResponseRepresentation(HttpResponseMessage message)
+        private string GetResponseErrorRepresentation(HttpResponseMessage message)
             => $"Error {(int)message.StatusCode}: {message.ReasonPhrase}";
     }
 }

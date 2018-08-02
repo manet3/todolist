@@ -64,26 +64,8 @@ namespace ToDoList.Client.Controls
         {
             var newState = (LoadingState)e.NewValue;
 
-            if (newState == (LoadingState)e.OldValue)
-                return;
-
-            var viewModel = (LoaderViewModel)((LoadingVisualiser)d).MainGrid.DataContext;
-
-            switch (newState)
-            {
-                case LoadingState.Started:
-                    viewModel.AddParticles();
-                    viewModel.AutoRestartActive = false;
-                    break;
-                case LoadingState.Failed:
-                    viewModel.RemoveParticles();
-                    viewModel.AutoRestartActive = true;
-                    break;
-                case LoadingState.None:
-                    viewModel.RemoveParticles();
-                    viewModel.AutoRestartActive = false;
-                    break;
-            }
+            ((LoaderViewModel)((LoadingVisualiser)d).MainGrid.DataContext)
+                .ChangeLoadingState(newState);
 
             var obj = (LoadingVisualiser)d;
             obj.PropertyChanged?.Invoke(obj,
@@ -92,6 +74,5 @@ namespace ToDoList.Client.Controls
 
         public LoadingVisualiser()
             => InitializeComponent();
-
     }
 }

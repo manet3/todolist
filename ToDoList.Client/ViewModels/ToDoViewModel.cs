@@ -5,9 +5,9 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using ToDoList.Shared;
 using ToDoList.Client.DataServices;
-using CSharpFunctionalExtensions;
 using ToDoList.Client.Controls;
 using System.Windows;
+using CSharpFunctionalExtensions;
 
 namespace ToDoList.Client.ViewModels
 {
@@ -40,6 +40,10 @@ namespace ToDoList.Client.ViewModels
 
         private const string MESSAGE_CLEAR = "";
         private const string MESSAGE_DUPLICATION = "Doing the same task twice is unproductive.";
+        //here 0 means 'infinity'
+        private const int TEMPORAL_MESSAGE_SEC = 5;
+        private const int UNDISPLAIED_LOADING_SEC = 3;
+
 
         private ObservableCollection<ToDoItem> _toDoItems;
         public ObservableCollection<ToDoItem> ToDoItems
@@ -48,49 +52,26 @@ namespace ToDoList.Client.ViewModels
             private set => SetValue(ref _toDoItems, value);
         }
 
-        private HashSet<ToDoItem> _itemsData = new HashSet<ToDoItem>();
+        private HashSet<ToDoItem> _itemsData;
 
-        private DataServicesManager _dataManager;
+        private Synchronisation _sync;
 
         public ToDoViewModel()
         {
-            ToDoItems = new ObservableCollection<ToDoItem>();
-            _dataManager = new DataServicesManager();
-
             AddCommand = new Command(ToDoAdd, CanToAdd);
             RemoveCommand = new Command(ToDoRemoveItems);
             ChangeCommand = new Command(SendChangeItem);
-            SyncRetryCommand = new Command(SyncRetry);
+            SyncRetryCommand = new Command(obj => RefreshListStart());
 
             Application.Current.Exit += AppExit;
 
-            GetListAsync();
+            ToDoItems = new ObservableCollection<ToDoItem>();
+            _itemsData = new HashSet<ToDoItem>();
+            _sync = new Synchronisation();
+
+            GetSavedSession();
+            RefreshListStart();
         }
-
-        private void AppExit(object sender, ExitEventArgs e)
-            => _dataManager.SaveIfNotSynchronised(ToDoItems);
-
-        private async void GetListAsync()
-        {
-            var res = await DisplaySync(_dataManager.GetAsync());
-
-            if (res != null)
-                ToDoItems = new ObservableCollection<ToDoItem>(res);
-            else
-                ToDoItems = new ObservableCollection<ToDoItem>(_dataManager.GetLocal());
-        }
-
-        #region Restart
-        public Command SyncRetryCommand { get; set; }
-
-        private async void SyncRetry(object obj)
-        {
-            if (ToDoItems.Count == 0)
-                GetListAsync();
-            else
-                await DisplaySync(_dataManager.UpdateAllAsync(ToDoItems));
-        }
-        #endregion
 
         #region Add item
         public Command AddCommand { get; set; }
@@ -112,7 +93,7 @@ namespace ToDoList.Client.ViewModels
                 ShowTemporalMessageAsync(MESSAGE_DUPLICATION);
             }
 
-            await DisplaySync(_dataManager.AddAsync(newItem));
+            await DisplaySync(_sync.AddAsync(newItem));
         }
         #endregion
 
@@ -120,7 +101,7 @@ namespace ToDoList.Client.ViewModels
         public Command ChangeCommand { get; set; }
 
         private async void SendChangeItem(object obj)
-            => await DisplaySync(_dataManager.UpdateAsync((ToDoItem)obj));
+            => await DisplaySync(_sync.UpdateAsync((ToDoItem)obj));
         #endregion
 
         #region Remove items
@@ -143,36 +124,71 @@ namespace ToDoList.Client.ViewModels
         {
             foreach (var item in items)
             {
-                await DisplaySync(_dataManager.DeleteByNameAsync(item.Name));
+                await DisplaySync(_sync.DeleteByNameAsync(item));
                 if (LoaderState == LoadingState.Failed)
                     return;
             }
         }
         #endregion
 
-        private async Task<T> DisplaySync<T>(Task<Result<T>> task)
+        public Command SyncRetryCommand { get; set; }
+
+        private async void RefreshListStart()
         {
-            if (!task.IsCompleted)
-                LoaderState = LoadingState.Started;
+            var res = await DisplaySync(_sync.GetWhenSynchronisedAsync());
 
-            var res = await task;
+            if (!res.IsFailure)
+                ToDoItems = new ObservableCollection<ToDoItem>(res.Value);
+            //stop sync in case of an error
+            else return;
 
-            if (res.IsFailure)
+            RefreshListStart();
+        }
+
+        private void AppExit(object sender, ExitEventArgs e)
+            => new SavedSession(_sync.Save(), ToDoItems).SaveJson();
+
+        private void GetSavedSession()
+        {
+            var session = SavedSession.FromJson();
+            if (session != null)
             {
-                (NotificationMessage, LoaderState) = (res.Error, LoadingState.Failed);
-                return default;
+                _sync.Restore(session.SyncState);
+                ToDoItems = new ObservableCollection<ToDoItem>(session.List);
             }
-            (NotificationMessage, LoaderState) = (string.Empty, LoadingState.None);
-            return res.Value;
         }
 
         private async void ShowTemporalMessageAsync(string message)
         {
             NotificationMessage = message;
-            await Task.Delay(new TimeSpan(0, 0, 5));
+            await Task.Delay(TimeSpan.FromSeconds(TEMPORAL_MESSAGE_SEC));
             NotificationMessage = MESSAGE_CLEAR;
         }
 
+        private async Task<Result<T>> DisplaySync<T>(Task<Result<T>> task)
+        {
+            LoaderState = LoadingState.None;
 
+            CheckIfDisplay(task);
+
+            var res = await task;
+
+            // show/hide notification, stop loader
+            (NotificationMessage, LoaderState)
+                = res.IsFailure ? (res.Error, LoadingState.Failed)
+                : (string.Empty, LoadingState.None);
+
+            return res;
+        }
+
+        private async void CheckIfDisplay(Task task)
+        {
+            if (!task.IsCompleted) return;
+
+            await Task.Delay(TimeSpan.FromSeconds(UNDISPLAIED_LOADING_SEC));
+
+            if (!task.IsCompleted)
+                LoaderState = LoadingState.Started;
+        }
     }
 }
