@@ -19,7 +19,7 @@ namespace ToDoList.Server.Database
 
         /// <param name="name"> Deletes item by unique content </param>
         /// <returns> Fail if no such name found </returns>
-        Result DeleteByName(string name);
+        Result DeleteByName(string name, DateTime timestamp);
 
         Result<IEnumerable<ItemDbModel>> List();
 

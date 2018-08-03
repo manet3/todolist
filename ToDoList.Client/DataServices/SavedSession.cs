@@ -26,7 +26,7 @@ namespace ToDoList.Client.DataServices
                 return null;
 
             var json = File.ReadAllText(SESSION_PATH);
-            //File.Delete(SESSION_PATH);
+            File.Delete(SESSION_PATH);
 
             try
             {

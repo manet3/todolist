@@ -43,7 +43,7 @@ namespace ToDoList.Client.ViewModels
         //here 0 means 'infinity'
         private const int MESSAGE_DELAY_SEC = 5;
         private const int UNDISPLAIED_LOADING_SEC = 3;
-
+        private const int SYNC_PERIOD_SEC = 5;
 
         private ObservableCollection<ToDoItem> _toDoItems;
         public ObservableCollection<ToDoItem> ToDoItems
@@ -139,6 +139,7 @@ namespace ToDoList.Client.ViewModels
             //stop sync in case of an error
             else return;
 
+            await Task.Delay(TimeSpan.FromSeconds(SYNC_PERIOD_SEC));
             RefreshListStart();
         }
 
