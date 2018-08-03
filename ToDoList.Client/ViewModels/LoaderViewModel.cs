@@ -12,6 +12,8 @@ namespace ToDoList.Client.ViewModels
     {
         private const int PARTICLES_NUMBER = 5;
 
+        private const int RESTART_TIME = 10;
+
         public ObservableCollection<Ellipse> Particles { get; set; }
 
         public ICommand RestartCommand;
@@ -30,8 +32,7 @@ namespace ToDoList.Client.ViewModels
             set
             {
                 SetValue(ref _autoRestart, value);
-                if (_autoRestart)
-                    RestartActivate();
+                RestartCountdown();
             }
         }
 
@@ -43,30 +44,36 @@ namespace ToDoList.Client.ViewModels
             switch (newLoaderState)
             {
                 case LoadingState.Started:
-                    AddParticles();
                     AutoRestartActive = false;
-                    break;
-                case LoadingState.Failed:
-                    RemoveParticles();
-                    AutoRestartActive = true;
+                    AddParticles();
                     break;
                 case LoadingState.None:
-                    RemoveParticles();
+                case LoadingState.Failed:
                     AutoRestartActive = false;
+                    RemoveParticles();
+                    break;
+                case LoadingState.Paused:
+                    AutoRestartActive = true;
+                    RemoveParticles();
                     break;
             }
         }
 
-        private async void RestartActivate()
+        private async void RestartCountdown()
         {
-            for (int i = 10; i >= 0; i--)
+            for (int i = RESTART_TIME; i >= 0; i--)
             {
+                if (!AutoRestartActive)
+                    return;
                 RetryAfterSec = i;
                 await Task.Delay(new TimeSpan(0, 0, 1));
-
-                //when canceled
-                if (!AutoRestartActive) return;
             }
+            Restart();
+        }
+
+        public void Restart()
+        {
+            ChangeLoadingState(LoadingState.None);
 
             if (RestartCommand != null && RestartCommand.CanExecute(this))
                 RestartCommand.Execute(this);

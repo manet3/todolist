@@ -113,7 +113,7 @@
 
         <controls:LoadingVisualiser Background="Transparent" 
                                     ActiveState="{Binding LoaderState}" 
-                                    RestartButtonPressed="{Binding SyncRetryCommand}"
+                                    RestartCommand="{Binding SyncRetryCommand}"
                                     Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" 
                                     VerticalAlignment="Top" 
                                     Margin="0,0,0,5"/>

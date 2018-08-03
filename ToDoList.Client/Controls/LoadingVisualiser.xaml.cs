@@ -11,7 +11,8 @@ namespace ToDoList.Client.Controls
     {
         None,
         Started,
-        Failed
+        Failed,
+        Paused
     }
     /// <summary>
     /// Interaction logic for DownloadVis.xaml
@@ -30,7 +31,7 @@ namespace ToDoList.Client.Controls
             set => SetValue(ActiveStateProperty, value);
         }
 
-        public ICommand RestartButtonPressed
+        public ICommand RestartCommand
         {
             get => (ICommand)GetValue(RestartButtonPressedProperty);
             set => SetValue(RestartButtonPressedProperty, value);
@@ -46,7 +47,7 @@ namespace ToDoList.Client.Controls
                 new PropertyChangedCallback(OnActiveChanged)));
 
             RestartButtonPressedProperty = DependencyProperty.Register(
-                "RestartButtonPressed",
+                "RestartCommand",
                 typeof(ICommand),
                 typeof(LoadingVisualiser),
                 new FrameworkPropertyMetadata(new PropertyChangedCallback(RestartCommandChanged)));
@@ -64,15 +65,20 @@ namespace ToDoList.Client.Controls
         {
             var newState = (LoadingState)e.NewValue;
 
-            ((LoaderViewModel)((LoadingVisualiser)d).MainGrid.DataContext)
-                .ChangeLoadingState(newState);
+            ((LoadingVisualiser)d).GetViewModel().ChangeLoadingState(newState);
 
             var obj = (LoadingVisualiser)d;
             obj.PropertyChanged?.Invoke(obj,
                 new PropertyChangedEventArgs(nameof(obj.ActiveState)));
         }
 
+        private LoaderViewModel GetViewModel() 
+            => (LoaderViewModel)MainGrid.DataContext;
+
         public LoadingVisualiser()
             => InitializeComponent();
+
+        private void RestartButtonClick(object sender, RoutedEventArgs e)
+            => GetViewModel().Restart();
     }
 }

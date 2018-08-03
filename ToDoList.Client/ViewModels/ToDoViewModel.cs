@@ -41,7 +41,7 @@ namespace ToDoList.Client.ViewModels
         private const string MESSAGE_CLEAR = "";
         private const string MESSAGE_DUPLICATION = "Doing the same task twice is unproductive.";
         //here 0 means 'infinity'
-        private const int TEMPORAL_MESSAGE_SEC = 5;
+        private const int MESSAGE_DELAY_SEC = 5;
         private const int UNDISPLAIED_LOADING_SEC = 3;
 
 
@@ -79,7 +79,7 @@ namespace ToDoList.Client.ViewModels
         public bool CanToAdd()
             => !string.IsNullOrWhiteSpace(ToDoItemText);
 
-        private async void ToDoAdd(object obj)
+        private void ToDoAdd(object obj)
         {
             var newItem = new ToDoItem { Name = ToDoItemText.Trim(), IsChecked = false };
 
@@ -87,27 +87,26 @@ namespace ToDoList.Client.ViewModels
             {
                 ToDoItems.Add(newItem);
                 ToDoItemText = "";
+                _sync.Add(newItem);
             }
             else
             {
-                ShowTemporalMessageAsync(MESSAGE_DUPLICATION);
+                ShowTemporalMessage(MESSAGE_DUPLICATION);
             }
-
-            await DisplaySync(_sync.AddAsync(newItem));
         }
         #endregion
 
         #region Change item
         public Command ChangeCommand { get; set; }
 
-        private async void SendChangeItem(object obj)
-            => await DisplaySync(_sync.UpdateAsync((ToDoItem)obj));
+        private void SendChangeItem(object obj)
+            => _sync.Update((ToDoItem)obj);
         #endregion
 
         #region Remove items
         public Command RemoveCommand { get; set; }
 
-        private async void ToDoRemoveItems(object obj)
+        private void ToDoRemoveItems(object obj)
         {
             var selectedItems = (IList)obj;
             var selectedArray = new ToDoItem[selectedItems.Count];
@@ -115,18 +114,9 @@ namespace ToDoList.Client.ViewModels
             selectedItems.CopyTo(selectedArray, 0);
 
             foreach (var item in selectedArray)
-                ToDoItems.Remove(item);
-
-            await SendRemoveItemsAsync(selectedArray);
-        }
-
-        private async Task SendRemoveItemsAsync(ToDoItem[] items)
-        {
-            foreach (var item in items)
             {
-                await DisplaySync(_sync.DeleteByNameAsync(item));
-                if (LoaderState == LoadingState.Failed)
-                    return;
+                ToDoItems.Remove(item);
+                _sync.DeleteByName(item);
             }
         }
         #endregion
@@ -135,7 +125,14 @@ namespace ToDoList.Client.ViewModels
 
         private async void RefreshListStart()
         {
-            var res = await DisplaySync(_sync.GetWhenSynchronisedAsync());
+            Result<IEnumerable<ToDoItem>, RequestError> res = await DisplaySync(_sync.GetWhenSynchronisedAsync());
+
+            while (res.IsFailure && res.Error.ErrorType == RequestErrorType.ServerError)
+            {
+                await ShowDelaiedMessage(res.Error.Message);
+                RefreshListStart();
+                return;
+            }
 
             if (!res.IsFailure)
                 ToDoItems = new ObservableCollection<ToDoItem>(res.Value);
@@ -158,32 +155,48 @@ namespace ToDoList.Client.ViewModels
             }
         }
 
-        private async void ShowTemporalMessageAsync(string message)
+        private async void ShowTemporalMessage(string message)
         {
-            NotificationMessage = message;
-            await Task.Delay(TimeSpan.FromSeconds(TEMPORAL_MESSAGE_SEC));
+            await ShowDelaiedMessage(message);
             NotificationMessage = MESSAGE_CLEAR;
         }
 
-        private async Task<Result<T>> DisplaySync<T>(Task<Result<T>> task)
+        private async Task ShowDelaiedMessage(string message)
         {
-            LoaderState = LoadingState.None;
+            NotificationMessage = message;
+            await Task.Delay(TimeSpan.FromSeconds(MESSAGE_DELAY_SEC));
+        }
 
+        private async Task<Result<IEnumerable<ToDoItem>, RequestError>> DisplaySync(Task<Result<IEnumerable<ToDoItem>, RequestError>> task)
+        {
             CheckIfDisplay(task);
 
             var res = await task;
 
             // show/hide notification, stop loader
-            (NotificationMessage, LoaderState)
-                = res.IsFailure ? (res.Error, LoadingState.Failed)
-                : (string.Empty, LoadingState.None);
+            if (res.IsFailure)
+            {
+                NotificationMessage = res.Error.Message;
+
+                var errorType = res.Error.ErrorType;
+
+                switch (errorType)
+                {
+                    case RequestErrorType.NoConnection:
+                        LoaderState = LoadingState.Failed; break;
+                    case RequestErrorType.Cancelled:
+                        LoaderState = LoadingState.Paused; break;
+                }
+            }
+            else
+                (NotificationMessage, LoaderState) = (string.Empty, LoadingState.None);
 
             return res;
         }
 
         private async void CheckIfDisplay(Task task)
         {
-            if (!task.IsCompleted) return;
+            if (task.IsCompleted) return;
 
             await Task.Delay(TimeSpan.FromSeconds(UNDISPLAIED_LOADING_SEC));
 
