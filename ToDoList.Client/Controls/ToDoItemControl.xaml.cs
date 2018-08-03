@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -31,11 +32,14 @@ namespace ToDoList.Client.Controls
         {
             var obj = (ToDoItemControl)d;
 
-            obj.TaskCheckBox.Checked += (s, ev) =>
+            Action<object, RoutedEventArgs> onChanged = (s, ev) =>
             {
                 if (obj.ItemChangedCommand.CanExecute(obj))
                     obj.ItemChangedCommand.Execute(obj.DataContext);
             };
+
+            obj.TaskCheckBox.Checked += new RoutedEventHandler(onChanged);
+            obj.TaskCheckBox.Unchecked += new RoutedEventHandler(onChanged);
         }
     }
 }
