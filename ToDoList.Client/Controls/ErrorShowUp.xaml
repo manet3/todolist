@@ -5,8 +5,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ToDoList.Client.Controls"
              mc:Ignorable="d" 
-             d:DesignHeight="300" Height="Auto" Width="Auto" d:DesignWidth="300" Name="ErrorControl">
-    <Grid>
+             Height="Auto" Width="Auto"
+             Name="ErrorControl">
+    <Grid DataContext="{Binding RelativeSource={RelativeSource AncestorType=UserControl}}">
         <Grid Margin="5,5,5,5">
             <Line X2="{Binding ActualWidth, ElementName=mainBorder}" 
                   Margin="5,3,5,0"
@@ -14,8 +15,7 @@
                 <Line.Style>
                     <Style TargetType="Line">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding GotMessage, 
-                            RelativeSource={RelativeSource  AncestorType=UserControl}}" 
+                            <DataTrigger Binding="{Binding GotMessage}" 
                                      Value="false">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
@@ -31,8 +31,7 @@
                        FontSize="14"
                        TextWrapping="Wrap"
                        Margin="10,2,10,2"
-                       Text="{Binding ErrorText, 
-                RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       Text="{Binding LastError}"
                        Name ="mesText"/>
                 
                 <Border.Style>
@@ -43,8 +42,7 @@
                             <MultiDataTrigger>
                                 
                                 <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding GotMessage, 
-                            RelativeSource={RelativeSource  AncestorType=UserControl}}"
+                                    <Condition Binding="{Binding GotMessage}"
                                            Value="true"/>
                                     <Condition Binding="{Binding IsChecked, ElementName=crossButton}" 
                                            Value="false"/>
@@ -112,8 +110,7 @@
                                 </Setter.Value>
                             </Setter>
                         </Trigger>
-                        <DataTrigger Binding="{Binding GotMessage, 
-                            RelativeSource={RelativeSource  AncestorType=UserControl}}" 
+                        <DataTrigger Binding="{Binding GotMessage}" 
                                      Value="true">
                             <Setter Property="IsChecked" Value="false"/>
                             <Setter TargetName="controlGrid" Property="Visibility" Value="Visible"/>

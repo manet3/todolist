@@ -180,15 +180,15 @@ namespace ToDoList.Client.ViewModels
             // show/hide notification, stop loader
             if (res.IsFailure)
             {
+                NotificationMessage = res.Error.Message;
+
                 var errorType = res.Error.ErrorType;
 
                 switch (errorType)
                 {
                     case RequestErrorType.NoConnection:
-                        ShowTemporalMessage(res.Error.Message);
                         LoaderState = LoadingState.Failed; break;
                     case RequestErrorType.Cancelled:
-                        NotificationMessage = res.Error.Message;
                         LoaderState = LoadingState.Paused; break;
                 }
             }
