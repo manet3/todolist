@@ -21,19 +21,19 @@ namespace ToDoList.Client.Controls
 
         public string LastError
         {
-            get => _errorStack.Any() 
-                ? _errorStack.Peek()
+            get => ErrorStack.Any() 
+                ? ErrorStack.Peek()
                 : string.Empty;
         }
 
         public bool GotMessage
         {
-            get => _errorStack.Any();
+            get => ErrorStack.Any();
         }
 
         public static DependencyProperty ErrorTextProperty;
 
-        private static Stack<string> _errorStack = new Stack<string>();
+        public Stack<string> ErrorStack = new Stack<string>();
 
         static ErrorShowUp()
         {
@@ -48,15 +48,15 @@ namespace ToDoList.Client.Controls
         {
             var newVal = (string)e.NewValue;
 
+            var obj = (ErrorShowUp)d;
+
             if (string.IsNullOrEmpty(newVal))
             {
                 //using empty message parameter to delete the showed one
-                if (_errorStack.Any())
-                    _errorStack.Pop();
+                if (obj.ErrorStack.Any())
+                    obj.ErrorStack.Pop();
             }
-            else _errorStack.Push(newVal);
-
-            var obj = (ErrorShowUp)d;
+            else obj.ErrorStack.Push(newVal);
             obj.PropertyChange(nameof(GotMessage));
             obj.PropertyChange(nameof(LastError));
         }

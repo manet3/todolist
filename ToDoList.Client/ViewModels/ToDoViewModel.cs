@@ -62,6 +62,14 @@ namespace ToDoList.Client.ViewModels
             set => SetValue(ref _notification, value);
         }
 
+        string _temporalNotification;
+        public string TemporalNotificationMessage
+        {
+            get => _temporalNotification;
+            set => SetValue(ref _temporalNotification, value);
+        }
+
+
         private LoadingState _loaderState;
         public LoadingState LoaderState
         {
@@ -154,9 +162,13 @@ namespace ToDoList.Client.ViewModels
         {
             Result<IEnumerable<ToDoItem>, RequestError> res = await DisplaySync(_sync.GetWhenSynchronisedAsync());
 
-            while (res.IsFailure && res.Error.ErrorType == RequestErrorType.ServerError)
+            if (res.IsFailure && res.Error.ErrorType == RequestErrorType.ServerError)
             {
-                await ShowDelaiedMessage(res.Error.Message);
+                //User will not see message re-opened if the same one is thrown 
+                //(if GET is not working, it will not be canceled)
+                NotificationMessage = res.Error.Message;
+                await Task.Delay(TimeSpan.FromSeconds(MESSAGE_DELAY_SEC));
+
                 RefreshListStart();
                 return;
             }
@@ -185,14 +197,9 @@ namespace ToDoList.Client.ViewModels
 
         private async void ShowTemporalMessage(string message)
         {
-            await ShowDelaiedMessage(message);
-            NotificationMessage = MESSAGE_CLEAR;
-        }
-
-        private async Task ShowDelaiedMessage(string message)
-        {
-            NotificationMessage = message;
+            TemporalNotificationMessage = message;
             await Task.Delay(TimeSpan.FromSeconds(MESSAGE_DELAY_SEC));
+            TemporalNotificationMessage = MESSAGE_CLEAR;
         }
 
         private async Task<Result<IEnumerable<ToDoItem>, RequestError>> DisplaySync(Task<Result<IEnumerable<ToDoItem>, RequestError>> task)

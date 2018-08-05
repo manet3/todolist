@@ -75,7 +75,7 @@
             <Button Content="+" 
                     Style="{StaticResource add-removeButton}" 
                     Command="{Binding AddCommand}"/>
-            
+
             <Button Content="-"
                     Grid.Row="1" 
                     CommandParameter="{Binding SelectedItems, ElementName=todoList}"
@@ -93,8 +93,14 @@
             </Button>
         </Grid>
 
-        <controls:ErrorShowUp ErrorText ="{Binding NotificationMessage}"  
-                              Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1"/>
+        <Grid Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <controls:ErrorShowUp ErrorText ="{Binding TemporalNotificationMessage}"/>
+            <controls:ErrorShowUp Grid.Row="1" ErrorText ="{Binding NotificationMessage}"/>
+        </Grid>
 
         <ListView Name="todoList" 
                   SelectionMode="Multiple"
@@ -106,8 +112,8 @@
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <controls:ToDoItemControl
-                        ItemChangedCommand="{Binding DataContext.ChangeCommand, RelativeSource={RelativeSource AncestorType=Window}}"/> 
-                </DataTemplate> 
+                        ItemChangedCommand="{Binding DataContext.ChangeCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
 
