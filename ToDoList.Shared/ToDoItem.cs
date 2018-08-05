@@ -5,29 +5,13 @@ namespace ToDoList.Shared
 {
     public class ToDoItem
     {
+        public DateTime Timestamp { get; set; }
+
+        public string Name { get; set; }
+
+        public bool IsChecked { get; set; }
+
         public const string DATE_FORMAT = "yy-mm-dd hh_mm_ss_fff";
-
-        private string _name;
-        public string Name
-        {
-            get => _name;
-            set => RefreshTimestampFor(ref _name, value);
-        }
-
-        private bool _isChecked;
-        public bool IsChecked
-        {
-            get => _isChecked;
-            set => RefreshTimestampFor(ref _isChecked, value);
-        }
-
-        public DateTime Timestamp { get; private set; }
-
-        private void RefreshTimestampFor<T>(ref T field, T value)
-        {
-            field = value;
-            Timestamp = DateTime.UtcNow;
-        }
 
         public override string ToString()
             => $"{Name}[{Timestamp.ToString(DATE_FORMAT)}]";

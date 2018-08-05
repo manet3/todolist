@@ -110,8 +110,8 @@
                   Margin="0,5,0,5" 
                   ItemsSource="{Binding ToDoItems}">
             <ListView.ItemTemplate>
-                <DataTemplate>
-                    <controls:ToDoItemControl
+                <DataTemplate >
+                    <controls:ToDoItemControl ItemModel ="{Binding}"
                         ItemChangedCommand="{Binding DataContext.ChangeCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </DataTemplate>
             </ListView.ItemTemplate>

@@ -74,6 +74,7 @@
     </Compile>
     <Compile Include="DataServices\SavedSession.cs" />
     <Compile Include="DataServices\SyncMemento.cs" />
+    <Compile Include="ViewModels\ItemViewModel.cs" />
     <Compile Include="ViewModels\LoaderViewModel.cs" />
     <Compile Include="DataServices\ApiAction.cs" />
     <Compile Include="DataServices\RequestSender.cs" />
