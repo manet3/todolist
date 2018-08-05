@@ -11,6 +11,37 @@ using CSharpFunctionalExtensions;
 
 namespace ToDoList.Client.ViewModels
 {
+    public class ObservableUniqueItemsList : ObservableCollection<ToDoItem>
+    {
+        private HashSet<ToDoItem> _hashSet;
+
+        public ObservableUniqueItemsList() : base()
+            => _hashSet = new HashSet<ToDoItem>();
+
+        public ObservableUniqueItemsList(IEnumerable<ToDoItem> collection)
+            : base(collection)
+            => _hashSet = new HashSet<ToDoItem>(collection);
+
+        public ObservableUniqueItemsList(List<ToDoItem> collection)
+            : this((IEnumerable<ToDoItem>)collection) { }
+
+        public new bool Add(ToDoItem item)
+        {
+            var isUnique = (_hashSet.Add(item));
+
+            if (isUnique)
+                base.Add(item);
+
+            return isUnique;
+        }
+
+        public new void Remove(ToDoItem item)
+        {
+            base.Remove(item);
+            _hashSet.Remove(item);
+        }
+    }
+
     class ToDoViewModel : ViewModelBase
     {
         string _toDoItemText;
@@ -45,14 +76,12 @@ namespace ToDoList.Client.ViewModels
         private const int UNDISPLAIED_LOADING_SEC = 3;
         private const int SYNC_PERIOD_SEC = 5;
 
-        private ObservableCollection<ToDoItem> _toDoItems;
-        public ObservableCollection<ToDoItem> ToDoItems
+        private ObservableUniqueItemsList _toDoItems;
+        public ObservableUniqueItemsList ToDoItems
         {
             get => _toDoItems;
             private set => SetValue(ref _toDoItems, value);
         }
-
-        private HashSet<ToDoItem> _itemsData;
 
         private Synchronisation _sync;
 
@@ -65,8 +94,7 @@ namespace ToDoList.Client.ViewModels
 
             Application.Current.Exit += AppExit;
 
-            ToDoItems = new ObservableCollection<ToDoItem>();
-            _itemsData = new HashSet<ToDoItem>();
+            ToDoItems = new ObservableUniqueItemsList();
             _sync = new Synchronisation();
 
             GetSavedSession();
@@ -83,9 +111,8 @@ namespace ToDoList.Client.ViewModels
         {
             var newItem = new ToDoItem { Name = ToDoItemText.Trim(), IsChecked = false };
 
-            if (_itemsData.Add(newItem))
+            if (ToDoItems.Add(newItem))
             {
-                ToDoItems.Add(newItem);
                 ToDoItemText = "";
                 _sync.Add(newItem);
             }
@@ -135,10 +162,7 @@ namespace ToDoList.Client.ViewModels
             }
 
             if (!res.IsFailure)
-            {
-                ToDoItems = new ObservableCollection<ToDoItem>(res.Value);
-                _itemsData = new HashSet<ToDoItem>(res.Value);
-            }
+                ToDoItems = new ObservableUniqueItemsList(res.Value);
             //stop sync in case of an error
             else return;
 
@@ -155,7 +179,7 @@ namespace ToDoList.Client.ViewModels
             if (session != null)
             {
                 _sync.Restore(session.SyncState);
-                ToDoItems = new ObservableCollection<ToDoItem>(session.List);
+                ToDoItems = new ObservableUniqueItemsList(session.List);
             }
         }
 

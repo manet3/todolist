@@ -5,7 +5,7 @@ namespace ToDoList.Shared
 {
     public class ToDoItem
     {
-        public const string DATE_FORMAT = "yy-mm-dd hh_mm_ss";
+        public const string DATE_FORMAT = "yy-mm-dd hh_mm_ss_fff";
 
         private string _name;
         public string Name

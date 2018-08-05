@@ -17,5 +17,11 @@ namespace ToDoList.Client.DataServices
         public static ApiAction Add = new ApiAction(HttpMethod.Post, "add");
 
         public static ApiAction Delete = new ApiAction(HttpMethod.Delete, "delete");
+
+        public override bool Equals(object obj)
+            => obj is ApiAction action && action.Name.Equals(Name);
+
+        public override int GetHashCode()
+            => Name.GetHashCode();
     }
 }
