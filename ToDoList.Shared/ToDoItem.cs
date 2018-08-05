@@ -11,15 +11,17 @@ namespace ToDoList.Shared
 
         public bool IsChecked { get; set; }
 
+        public ulong Id { get; set; }
+
         public const string DATE_FORMAT = "yy-mm-dd hh_mm_ss_fff";
 
         public override string ToString()
-            => $"{Name}[{Timestamp.ToString(DATE_FORMAT)}]";
+            => $"{Id}[{Timestamp.ToString(DATE_FORMAT)}]";
 
         public static ToDoItem Parse(string repr)
         {
             var parts = repr.Split('[',']');
-            return new ToDoItem { Name = parts[0],
+            return new ToDoItem { Id = ulong.Parse(parts[0]),
                 Timestamp = DateTime.ParseExact(parts[1], DATE_FORMAT, CultureInfo.InvariantCulture) };
         }
 

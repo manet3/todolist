@@ -84,7 +84,12 @@ namespace ToDoList.Server.Database
                     return Result.Fail("Item not found");
 
                 if (item.TimeStamp >= dbItem.TimeStamp)
-                    _dbConn.Update<ItemDbModel>(new { IsChecked = item.IsChecked },
+                    _dbConn.Update<ItemDbModel>(
+                        new
+                        {
+                            IsChecked = item.IsChecked,
+                            Timestamp = item.TimeStamp
+                        },
                         where: x => x.Name == item.Name);
 
                 return Result.Ok();
@@ -92,10 +97,10 @@ namespace ToDoList.Server.Database
 
                 "Failed to update item");
 
-        public Result DeleteByName(string name, DateTime timestamp)
+        public Result DeleteByName(ulong id, DateTime timestamp)
             => _exceptionHandle.SqlExceptionHandler(() =>
             {
-                var dbItem = _dbConn.Single<ItemDbModel>((x) => x.Name == name);
+                var dbItem = _dbConn.Single<ItemDbModel>((x) => x.Id == id);
 
                 if (dbItem == null)
                     return Result.Fail("Item not found");
