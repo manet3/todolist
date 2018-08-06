@@ -65,16 +65,6 @@ namespace ToDoList.Server.Database
 
                 "Failed to get DB table");
 
-        public Result UpdateAllForce(IEnumerable<ItemDbModel> item_set)
-            => _exceptionHandle.SqlExceptionHandler(() =>
-            {
-                var n = _dbConn.DeleteAll<ItemDbModel>();
-                _dbConn.InsertAll(item_set);
-
-                return Result.Ok(n);
-            },
-                "Failed to rewrite DB table");
-
         public Result UpdateItem(ItemDbModel item)
             => _exceptionHandle.SqlExceptionHandler(() =>
             {

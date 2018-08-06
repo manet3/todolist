@@ -27,7 +27,6 @@ namespace ToDoList.Client.DataServices
         public RequestError(string message,
             RequestErrorType errorType = RequestErrorType.None)
             => (Message, ErrorType) = (message, errorType);
-
     }
 
     public class RequestSender
@@ -70,7 +69,7 @@ namespace ToDoList.Client.DataServices
                 using (var client = new HttpClient { Timeout = WaitingTime })
                 {
                     var message = action.Equals(ApiAction.Delete)
-                    ? new HttpRequestMessage(action.Method, new Uri(http, $"{action.Name}/{item.ToString()}"))
+                    ? new HttpRequestMessage(action.Method, new Uri(http, $"{action.Name}/{item}"))
                     : ConfigureMessage(item, action);
 
                     var res = await client.SendAsync(message);

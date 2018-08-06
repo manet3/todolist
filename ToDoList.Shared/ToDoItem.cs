@@ -13,7 +13,7 @@ namespace ToDoList.Shared
 
         public ulong Id { get; set; }
 
-        public const string DATE_FORMAT = "yy-mm-dd hh_mm_ss_fff";
+        public const string DATE_FORMAT = "yy-MM-dd HH_mm_ss_fff";
 
         public override string ToString()
             => $"{Id}[{Timestamp.ToString(DATE_FORMAT)}]";

@@ -6,7 +6,6 @@ using AutoMapper;
 using ToDoList.Shared;
 using System.Net;
 using System.Net.Http;
-using CSharpFunctionalExtensions;
 
 namespace ToDoList.Server.Controllers
 {
@@ -47,19 +46,6 @@ namespace ToDoList.Server.Controllers
         }
 
         [HttpPut, HttpPatch]
-        public void Rewrite(IEnumerable<ToDoItem> new_items)
-        {
-            ThrowIfLiteDbNotExists();
-
-            OnNullThrowArgumentException(new_items);
-
-            var result = _repository.UpdateAllForce(Mapper.Map<IEnumerable<ItemDbModel>>(new_items));
-
-            if (result.IsFailure)
-                throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
-        }
-
-        [HttpPut, HttpPatch]
         public void Change(ToDoItem item)
         {
             ThrowIfLiteDbNotExists();
@@ -70,7 +56,6 @@ namespace ToDoList.Server.Controllers
 
             if (result.IsFailure)
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
-
         }
 
         [HttpDelete]
