@@ -91,7 +91,7 @@ namespace ToDoList.Client.ViewModels
             private set => SetValue(ref _toDoItems, value);
         }
 
-        private Synchronisation _sync;
+        private Sync _sync;
 
         public ToDoViewModel()
         {
@@ -103,7 +103,7 @@ namespace ToDoList.Client.ViewModels
             Application.Current.Exit += AppExit;
 
             ToDoItems = new ObservableUniqueItemsList();
-            _sync = new Synchronisation();
+            _sync = new Sync(RequestSender.SyncInit());
 
             GetSavedSession();
             RefreshListStart();
@@ -162,7 +162,7 @@ namespace ToDoList.Client.ViewModels
         {
             Result<IEnumerable<ToDoItem>, RequestError> res = await DisplaySync(_sync.GetWhenSynchronisedAsync());
 
-            if (res.IsFailure && res.Error.ErrorType == RequestErrorType.ServerError)
+            if (res.IsFailure && res.Error.Type == RequestErrorType.ServerError)
             {
                 //User will not see message re-opened if the same one is thrown 
                 //(if GET is not working, it will not be canceled)
@@ -213,7 +213,7 @@ namespace ToDoList.Client.ViewModels
             {
                 NotificationMessage = res.Error.Message;
 
-                var errorType = res.Error.ErrorType;
+                var errorType = res.Error.Type;
 
                 switch (errorType)
                 {

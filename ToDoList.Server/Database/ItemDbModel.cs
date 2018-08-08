@@ -14,7 +14,7 @@ namespace ToDoList.Server.Database.Models
         public bool IsChecked { get; set; }
 
         [Required]
-        public DateTime TimeStamp { get;  set;}
+        public DateTime Timestamp { get;  set;}
 
     }
 }

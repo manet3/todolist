@@ -16,14 +16,14 @@ namespace ToDoList.Client.DataServices
             => (Action, Item) = (action, item);
     }
 
-    class Synchronisation
+    public class Sync
     {
-        private RequestSender _req;
+        private IRequestSender _req;
 
         private Queue<ItemSendAction> _failedActions = new Queue<ItemSendAction>();
 
-        public Synchronisation()
-            => _req = RequestSender.SyncInit();
+        public Sync(IRequestSender req)
+            => _req = req;
 
         public void Add(ToDoItem item)
             => _failedActions.Enqueue(new ItemSendAction(item, ApiAction.Add));
@@ -52,7 +52,7 @@ namespace ToDoList.Client.DataServices
 
                 if (res.IsFailure)
                 {
-                    if (res.Error.ErrorType == RequestErrorType.ServerError)
+                    if (res.Error.Type == RequestErrorType.ServerError)
                         _failedActions.Dequeue();
                     return res;
                 }

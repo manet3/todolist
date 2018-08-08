@@ -66,7 +66,7 @@ namespace ToDoList.Server.Controllers
             OnNullThrowArgumentException(id);
 
             var item = ToDoItem.Parse(id);
-            var result = _repository.DeleteByName(item.Id, item.Timestamp);
+            var result = _repository.DeleteById(item.Id, item.Timestamp);
 
             if (result.IsFailure)
                 throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);

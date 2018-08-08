@@ -22,14 +22,21 @@ namespace ToDoList.Client.DataServices
     {
         public string Message;
 
-        public RequestErrorType ErrorType;
+        public RequestErrorType Type;
 
         public RequestError(string message,
             RequestErrorType errorType = RequestErrorType.None)
-            => (Message, ErrorType) = (message, errorType);
+            => (Message, Type) = (message, errorType);
     }
 
-    public class RequestSender
+    public interface IRequestSender
+    {
+        Task<Result<object, RequestError>> SendRequestAsync(ToDoItem item, ApiAction action);
+
+        Task<Result<IEnumerable<ToDoItem>, RequestError>> GetTasksAsync();
+    }
+
+    public class RequestSender : IRequestSender
     {
         private Uri http;
 
@@ -68,14 +75,14 @@ namespace ToDoList.Client.DataServices
             {
                 using (var client = new HttpClient { Timeout = WaitingTime })
                 {
-                    var message = action.Equals(ApiAction.Delete)
+                    var message = action == ApiAction.Delete
                     ? new HttpRequestMessage(action.Method, new Uri(http, $"{action.Name}/{item}"))
                     : ConfigureMessage(item, action);
 
                     var res = await client.SendAsync(message);
 
                     if (res.StatusCode == HttpStatusCode.NoContent)
-                        return Result.Ok<object, RequestError>(res);
+                        return Result.Ok<object, RequestError>(new { });
 
                     return Result.Fail<object, RequestError>(GetResponseErrorRepresentation(res));
                 }

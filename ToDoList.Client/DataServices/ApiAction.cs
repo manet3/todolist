@@ -18,6 +18,12 @@ namespace ToDoList.Client.DataServices
 
         public static ApiAction Delete = new ApiAction(HttpMethod.Delete, "delete");
 
+        public static bool operator ==(ApiAction action1, ApiAction action2)
+            => action1.Equals(action2);
+
+        public static bool operator !=(ApiAction action1, ApiAction action2)
+            => !action1.Equals(action2);
+
         public override bool Equals(object obj)
             => obj is ApiAction action && action.Name.Equals(Name);
 

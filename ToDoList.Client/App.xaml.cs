@@ -10,10 +10,10 @@ namespace ToDoList.Client
     {
         public App()
         {
-            var currentProc = Process.GetCurrentProcess();
+            //var currentProc = Process.GetCurrentProcess();
 
-            if (Process.GetProcessesByName(currentProc.ProcessName).Length > 1)
-                currentProc.Kill();
+            //if (Process.GetProcessesByName(currentProc.ProcessName).Any())
+            //    currentProc.Kill();
 
             InitializeComponent();
         }
