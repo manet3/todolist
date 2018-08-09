@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ToDoList.Shared;
 
 namespace ToDoList.Client.DataServices
 {
-
     public struct ItemSendAction
     {
         public ApiAction Action;
@@ -15,7 +15,21 @@ namespace ToDoList.Client.DataServices
             => (Action, Item) = (action, item);
     }
 
-    public class Sync
+    public interface ISync
+    {
+        void Add(ToDoItem item);
+        void Delete(ToDoItem item);
+        void Update(ToDoItem item);
+
+        Task<RequestResult<IEnumerable<ToDoItem>>> GetWhenSynchronisedAsync();
+
+        Type MementoType { get; }
+
+        object Save();
+        void Restore(object memento);
+    }
+
+    public class Sync : ISync
     {
         private IRequestSender _req;
 
@@ -24,10 +38,12 @@ namespace ToDoList.Client.DataServices
         public Sync(IRequestSender req)
             => _req = req;
 
+        public Type MementoType => typeof(SyncMemento);
+
         public void Add(ToDoItem item)
             => _failedActions.Enqueue(new ItemSendAction(item, ApiAction.Add));
 
-        public void DeleteByName(ToDoItem item)
+        public void Delete(ToDoItem item)
             => _failedActions.Enqueue(new ItemSendAction(item, ApiAction.Delete));
 
         public void Update(ToDoItem item)
@@ -61,10 +77,13 @@ namespace ToDoList.Client.DataServices
             return RequestResult.Ok();
         }
 
-        public SyncMemento Save()
+        public object Save()
             => new SyncMemento(_failedActions);
 
-        public void Restore(SyncMemento memento)
-            => _failedActions = memento.Actions;
+        public void Restore(object memento)
+        {
+            if (memento is SyncMemento syncMemento)
+                _failedActions = syncMemento.Actions;
+        }
     }
 }

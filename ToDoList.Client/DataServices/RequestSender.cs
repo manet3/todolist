@@ -24,22 +24,8 @@ namespace ToDoList.Client.DataServices
 
         private readonly TimeSpan WaitingTime = TimeSpan.FromSeconds(40);
 
-        private RequestSender()
-        {
-            http = new Uri("http://localhost:51650/");
-        }
-
-        private static bool _isInitialised;
-
-        public static RequestSender SyncInit()
-        {
-            if (!_isInitialised)
-            {
-                _isInitialised = true;
-                return new RequestSender();
-            }
-            else return null;
-        }
+        public RequestSender()
+            => http = new Uri("http://localhost:51650/");
 
         private HttpRequestMessage ConfigureMessage<T>(T body, ApiAction method)
             => new HttpRequestMessage(method.Method, new Uri(http, method.Name))

@@ -3,14 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:viewmodels="clr-namespace:ToDoList.Client.ViewModels"
         xmlns:controls="clr-namespace:ToDoList.Client.Controls"
         mc:Ignorable="d"
         Title="ToDo" 
-        Height="400" Width="300">
-    <Window.DataContext>
-        <viewmodels:ToDoViewModel/>
-    </Window.DataContext>
+        Height="400" Width="300"
+        DataContext="{Binding ToDoViewModel, Source={StaticResource ViewModelLocator}}">
     <Window.Style>
         <Style TargetType="{x:Type Window}">
             <Setter Property="WindowStyle" Value="None"/>

@@ -37,7 +37,7 @@ namespace ToDoList.Client.Tests
             };
             getWhenSync();
 
-            _sync.Save().Actions.Should().HaveCountLessOrEqualTo(0);
+            ((SyncMemento)_sync.Save()).Actions.Should().HaveCountLessOrEqualTo(0);
         }
 
         private ActionErrorMock[] GetErrored(RequestErrorType typeOfError, params ApiAction[] toError)

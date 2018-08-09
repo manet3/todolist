@@ -89,9 +89,9 @@ namespace ToDoList.Client.ViewModels
             private set => SetValue(ref _toDoItems, value);
         }
 
-        private Sync _sync;
+        private ISync _sync;
 
-        public ToDoViewModel()
+        public ToDoViewModel(ISync sync)
         {
             AddCommand = new Command(ToDoAdd, CanToAdd);
             RemoveCommand = new Command(ToDoRemoveItems);
@@ -101,7 +101,7 @@ namespace ToDoList.Client.ViewModels
             Application.Current.Exit += AppExit;
 
             ToDoItems = new ObservableUniqueItemsList();
-            _sync = new Sync(RequestSender.SyncInit());
+            _sync = sync;
 
             GetSavedSession();
             RefreshListStart();
@@ -156,7 +156,7 @@ namespace ToDoList.Client.ViewModels
             foreach (var item in selectedArray)
             {
                 ToDoItems.Remove(item);
-                _sync.DeleteByName(item);
+                _sync.Delete(item);
             }
         }
         #endregion
@@ -227,14 +227,14 @@ namespace ToDoList.Client.ViewModels
         }
 
         private void AppExit(object sender, ExitEventArgs e)
-            => new SavedSession(_sync.Save(), ToDoItems).SaveJson();
+            => new SessionSaver(_sync.Save(), _sync.MementoType, ToDoItems).SaveJson();
 
         private void GetSavedSession()
         {
-            var session = SavedSession.FromJson();
+            var session = SessionSaver.FromJson(_sync.MementoType);
             if (session != null)
             {
-                _sync.Restore(session.SyncState);
+                _sync.Restore(session.SyncMemento);
                 ToDoItems = new ObservableUniqueItemsList(session.List);
             }
         }
