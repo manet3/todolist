@@ -6,34 +6,14 @@ using System.Net;
 using System.Net.Http;
 using ToDoList.Shared;
 using Newtonsoft.Json;
-using CSharpFunctionalExtensions;
 
 namespace ToDoList.Client.DataServices
 {
-    public enum RequestErrorType
-    {
-        None,
-        Cancelled,
-        NoConnection,
-        ServerError
-    }
-
-    public class RequestError
-    {
-        public string Message;
-
-        public RequestErrorType Type;
-
-        public RequestError(string message,
-            RequestErrorType errorType = RequestErrorType.None)
-            => (Message, Type) = (message, errorType);
-    }
-
     public interface IRequestSender
     {
-        Task<Result<object, RequestError>> SendRequestAsync(ToDoItem item, ApiAction action);
+        Task<RequestResult> SendRequestAsync(ToDoItem item, ApiAction action);
 
-        Task<Result<IEnumerable<ToDoItem>, RequestError>> GetTasksAsync();
+        Task<RequestResult<IEnumerable<ToDoItem>>> GetTasksAsync();
     }
 
     public class RequestSender : IRequestSender
@@ -70,7 +50,7 @@ namespace ToDoList.Client.DataServices
                       , "application/json")
             };
 
-        public async Task<Result<object, RequestError>> SendRequestAsync(ToDoItem item, ApiAction action)
+        public async Task<RequestResult> SendRequestAsync(ToDoItem item, ApiAction action)
             => await RequestExceptionsHandle(async () =>
             {
                 using (var client = new HttpClient { Timeout = WaitingTime })
@@ -82,13 +62,13 @@ namespace ToDoList.Client.DataServices
                     var res = await client.SendAsync(message);
 
                     if (res.StatusCode == HttpStatusCode.NoContent)
-                        return Result.Ok<object, RequestError>(new { });
+                        return RequestResult.Ok(res);
 
-                    return Result.Fail<object, RequestError>(GetResponseErrorRepresentation(res));
+                    return RequestResult.Fail<HttpResponseMessage>(GetResponseErrorRepresentation(res));
                 }
             });
 
-        public async Task<Result<IEnumerable<ToDoItem>, RequestError>> GetTasksAsync()
+        public async Task<RequestResult<IEnumerable<ToDoItem>>> GetTasksAsync()
             => await RequestExceptionsHandle(async () =>
               {
                   using (var client = new HttpClient { Timeout = WaitingTime })
@@ -99,14 +79,14 @@ namespace ToDoList.Client.DataServices
                       if (res.StatusCode == HttpStatusCode.OK)
                       {
                           var resValue = JsonConvert.DeserializeObject<IEnumerable<ToDoItem>>(json);
-                          return Result.Ok<IEnumerable<ToDoItem>, RequestError>(resValue);
+                          return RequestResult.Ok(resValue);
                       }
 
-                      return Result.Fail<IEnumerable<ToDoItem>, RequestError>(GetResponseErrorRepresentation(res));
+                      return RequestResult.Fail<IEnumerable<ToDoItem>>(GetResponseErrorRepresentation(res));
                   }
               });
 
-        public async Task<Result<T, RequestError>> RequestExceptionsHandle<T>(Func<Task<Result<T, RequestError>>> handledScope)
+        public async Task<RequestResult<T>> RequestExceptionsHandle<T>(Func<Task<RequestResult<T>>> handledScope)
         {
             try
             {
@@ -114,12 +94,12 @@ namespace ToDoList.Client.DataServices
             }
             catch (HttpRequestException)
             {
-                return Result.Fail<T, RequestError>(
+                return RequestResult.Fail<T>(
                     new RequestError("Server is unreachable. Try another port or something.", RequestErrorType.NoConnection));
             }
             catch (TaskCanceledException)
             {
-                return Result.Fail<T, RequestError>(
+                return RequestResult.Fail<T>(
                     new RequestError("Too long waiting for the response.", RequestErrorType.Cancelled));
             }
         }

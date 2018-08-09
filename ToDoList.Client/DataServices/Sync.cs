@@ -1,5 +1,4 @@
-﻿using CSharpFunctionalExtensions;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ToDoList.Shared;
@@ -34,16 +33,16 @@ namespace ToDoList.Client.DataServices
         public void Update(ToDoItem item)
             => _failedActions.Enqueue(new ItemSendAction(item, ApiAction.Change));
 
-        public async Task<Result<IEnumerable<ToDoItem>, RequestError>> GetWhenSynchronisedAsync()
+        public async Task<RequestResult<IEnumerable<ToDoItem>>> GetWhenSynchronisedAsync()
         {
             var queRes = await FinishQueue();
             if (queRes.IsFailure)
-                return Result.Fail<IEnumerable<ToDoItem>, RequestError>(queRes.Error);
+                return RequestResult.Fail<IEnumerable<ToDoItem>>(queRes.Error);
 
             return await _req.GetTasksAsync();
         }
 
-        private async Task<Result<object, RequestError>> FinishQueue()
+        private async Task<RequestResult> FinishQueue()
         {
             while (_failedActions.Any())
             {
@@ -59,7 +58,7 @@ namespace ToDoList.Client.DataServices
 
                 _failedActions.Dequeue();
             }
-            return Result.Ok<object, RequestError>(new { });
+            return RequestResult.Ok();
         }
 
         public SyncMemento Save()

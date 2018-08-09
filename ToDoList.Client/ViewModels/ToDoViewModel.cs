@@ -7,7 +7,6 @@ using ToDoList.Shared;
 using ToDoList.Client.DataServices;
 using ToDoList.Client.Controls;
 using System.Windows;
-using CSharpFunctionalExtensions;
 
 namespace ToDoList.Client.ViewModels
 {
@@ -77,7 +76,6 @@ namespace ToDoList.Client.ViewModels
             set => SetValue(ref _loaderState, value);
         }
 
-        private const string MESSAGE_CLEAR = "";
         private const string MESSAGE_DUPLICATION = "Doing the same task twice is unproductive.";
         //here 0 means 'infinity'
         private const int MESSAGE_DELAY_SEC = 5;
@@ -131,6 +129,13 @@ namespace ToDoList.Client.ViewModels
         }
         #endregion
 
+        private async void ShowTemporalMessage(string message)
+        {
+            TemporalNotificationMessage = message;
+            await Task.Delay(TimeSpan.FromSeconds(MESSAGE_DELAY_SEC));
+            TemporalNotificationMessage = string.Empty;
+        }
+
         #region Change item
         public Command ChangeCommand { get; set; }
 
@@ -160,26 +165,65 @@ namespace ToDoList.Client.ViewModels
 
         private async void RefreshListStart()
         {
-            Result<IEnumerable<ToDoItem>, RequestError> res = await DisplaySync(_sync.GetWhenSynchronisedAsync());
+            var res = await HandleSyncState(_sync.GetWhenSynchronisedAsync());
 
-            if (res.IsFailure && res.Error.Type == RequestErrorType.ServerError)
-            {
-                //User will not see message re-opened if the same one is thrown 
-                //(if GET is not working, it will not be canceled)
-                NotificationMessage = res.Error.Message;
-                await Task.Delay(TimeSpan.FromSeconds(MESSAGE_DELAY_SEC));
-
-                RefreshListStart();
+            if (res.IsFailure)
                 return;
-            }
 
-            if (!res.IsFailure)
-                ToDoItems = new ObservableUniqueItemsList(res.Value);
-            //stop sync in case of an error
-            else return;
+            ToDoItems = new ObservableUniqueItemsList(res.Value);
 
+            await RefreshAfterDelay();
+        }
+
+        private async Task RefreshAfterDelay()
+        {
             await Task.Delay(TimeSpan.FromSeconds(SYNC_PERIOD_SEC));
             RefreshListStart();
+        }
+
+        private async Task<RequestResult<IEnumerable<ToDoItem>>> HandleSyncState(Task<RequestResult<IEnumerable<ToDoItem>>> task)
+        {
+            CheckStartLoader(task);
+
+            var res = await task;
+
+            FinishLoader(res.Error);
+            UpdateErrorMessage(res.Error);
+
+            if (res.Error.Type == RequestErrorType.ServerError)
+                await RefreshAfterDelay();
+
+            return res;
+        }
+
+        private async void CheckStartLoader(Task task)
+        {
+            if (task.IsCompleted) return;
+
+            await Task.Delay(TimeSpan.FromSeconds(UNDISPLAIED_LOADING_SEC));
+
+            if (!task.IsCompleted)
+                LoaderState = LoadingState.Started;
+        }
+
+        private void FinishLoader(RequestError error)
+        {
+            switch (error.Type)
+            {
+                case RequestErrorType.None:
+                    LoaderState = LoadingState.None; break;
+                case RequestErrorType.NoConnection:
+                    LoaderState = LoadingState.Failed; break;
+                case RequestErrorType.Cancelled:
+                    LoaderState = LoadingState.Paused; break;
+            }
+        }
+
+        private void UpdateErrorMessage(RequestError error)
+        {
+            if (error.Type == RequestErrorType.None)
+                NotificationMessage = string.Empty;
+            else NotificationMessage = error.Message;
         }
 
         private void AppExit(object sender, ExitEventArgs e)
@@ -193,50 +237,6 @@ namespace ToDoList.Client.ViewModels
                 _sync.Restore(session.SyncState);
                 ToDoItems = new ObservableUniqueItemsList(session.List);
             }
-        }
-
-        private async void ShowTemporalMessage(string message)
-        {
-            TemporalNotificationMessage = message;
-            await Task.Delay(TimeSpan.FromSeconds(MESSAGE_DELAY_SEC));
-            TemporalNotificationMessage = MESSAGE_CLEAR;
-        }
-
-        private async Task<Result<IEnumerable<ToDoItem>, RequestError>> DisplaySync(Task<Result<IEnumerable<ToDoItem>, RequestError>> task)
-        {
-            CheckIfDisplay(task);
-
-            var res = await task;
-
-            // show/hide notification, stop loader
-            if (res.IsFailure)
-            {
-                NotificationMessage = res.Error.Message;
-
-                var errorType = res.Error.Type;
-
-                switch (errorType)
-                {
-                    case RequestErrorType.NoConnection:
-                        LoaderState = LoadingState.Failed; break;
-                    case RequestErrorType.Cancelled:
-                        LoaderState = LoadingState.Paused; break;
-                }
-            }
-            else
-                (NotificationMessage, LoaderState) = (string.Empty, LoadingState.None);
-
-            return res;
-        }
-
-        private async void CheckIfDisplay(Task task)
-        {
-            if (task.IsCompleted) return;
-
-            await Task.Delay(TimeSpan.FromSeconds(UNDISPLAIED_LOADING_SEC));
-
-            if (!task.IsCompleted)
-                LoaderState = LoadingState.Started;
         }
     }
 }

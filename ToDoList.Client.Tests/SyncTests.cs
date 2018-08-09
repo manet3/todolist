@@ -6,7 +6,6 @@ using FluentAssertions;
 using ToDoList.Shared;
 using System.Linq;
 using System;
-using System.Threading;
 
 namespace ToDoList.Client.Tests
 {
