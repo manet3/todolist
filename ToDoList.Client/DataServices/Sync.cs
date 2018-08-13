@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using ToDoList.Shared;
 
 namespace ToDoList.Client.DataServices
@@ -20,21 +22,34 @@ namespace ToDoList.Client.DataServices
         void Delete(ToDoItem item);
         void Update(ToDoItem item);
 
-        Task<RequestResult<IEnumerable<ToDoItem>>> GetWhenSynchronisedAsync();
+        void StartSync();
 
-        object GetState();
+        event Action<IEnumerable<ToDoItem>> GotItems;
+        event Action<RequestError> ErrorOccured;
+        event Action LongLoadingStarted;
 
+        object CurrentState { get; }
         void RestoreState(object state);
     }
 
     public class Sync : ISync
     {
+        private const int SYNC_PERIOD_SEC = 5;
+
         private IRequestSender _req;
 
         private Queue<ItemSendAction> _failedActions = new Queue<ItemSendAction>();
 
+        private DispatcherTimer _syncTimer;
+
         public Sync(IRequestSender req)
             => _req = req;
+
+        public event Action<IEnumerable<ToDoItem>> GotItems;
+
+        public event Action<RequestError> ErrorOccured;
+
+        public event Action LongLoadingStarted;
 
         public void Add(ToDoItem item)
             => _failedActions.Enqueue(new ItemSendAction(item, ApiAction.Add));
@@ -45,40 +60,73 @@ namespace ToDoList.Client.DataServices
         public void Update(ToDoItem item)
             => _failedActions.Enqueue(new ItemSendAction(item, ApiAction.Change));
 
-        public async Task<RequestResult<IEnumerable<ToDoItem>>> GetWhenSynchronisedAsync()
+        public void StartSync()
         {
-            var queRes = await FinishQueue();
-            if (queRes.IsFailure)
-                return RequestResult.Fail<IEnumerable<ToDoItem>>(queRes.Error);
-
-            return await _req.GetTasksAsync();
+            Synchronize();
+            SyncTimerInit();
+            _syncTimer.Start();
         }
 
-        private async Task<RequestResult> FinishQueue()
+        private void SyncTimerInit()
         {
-            while (_failedActions.Any())
+            _syncTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(SYNC_PERIOD_SEC)
+            };
+            _syncTimer.Tick += (s, e) => Synchronize();
+        }
+
+        private async void Synchronize()
+        {
+            if (!await TryFinishQueue() || !await TryGet())
+                _syncTimer.Stop();
+        }
+
+        private async Task<bool> TryGet()
+        {
+            var res = await CheckIfLongLoading(_req.GetTasksAsync());
+            if (res.IsFailure)
+                ErrorOccured(res.Error);
+            else
+                GotItems(res.Value);
+
+            return !res.IsFailure;
+        }
+
+        private async Task<bool> TryFinishQueue()
+        {
+            var res = RequestResult.Ok();
+
+            while (_failedActions.Any() && !res.IsFailure)
             {
                 var firstAction = _failedActions.Peek();
-                var res = await _req.SendRequestAsync(firstAction.Item, firstAction.Action);
+
+                res = await CheckIfLongLoading(
+                    _req.SendRequestAsync(firstAction.Item, firstAction.Action));
+
+                if (!res.IsFailure || res.Error.Type == RequestErrorType.ServerError)
+                    _failedActions.Dequeue();
 
                 if (res.IsFailure)
-                {
-                    if (res.Error.Type == RequestErrorType.ServerError)
-                        _failedActions.Dequeue();
-                    return res;
-                }
-
-                _failedActions.Dequeue();
+                    ErrorOccured(res.Error);
             }
-            return RequestResult.Ok();
+
+            return !res.IsFailure;
         }
+
+        private T CheckIfLongLoading<T>(T task) where T : Task
+        {
+            if (!task.IsCompleted)
+                LongLoadingStarted();
+            return task;
+        }
+
+        public object CurrentState => _failedActions;
 
         public void RestoreState(object state)
         {
             if (state is Queue<ItemSendAction> actions)
                 _failedActions = new Queue<ItemSendAction>(actions);
         }
-
-        public object GetState() => _failedActions;
     }
 }

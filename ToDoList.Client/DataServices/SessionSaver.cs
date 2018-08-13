@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using ToDoList.Shared;
 
 namespace ToDoList.Client.DataServices
@@ -38,7 +39,7 @@ namespace ToDoList.Client.DataServices
             try
             {
                 return JsonConvert.DeserializeObject<SessionSaver>(json,
-                    new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto });
+                   new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto });
             }
             //file corruption
             catch (JsonException)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,18 +7,17 @@ using ToDoList.Shared;
 using ToDoList.Client.DataServices;
 using ToDoList.Client.ViewModels.Common;
 using ToDoList.Client.Controls;
-using System.Windows.Threading;
 
 namespace ToDoList.Client.ViewModels
 {
-    public class ObservableUniqueItemsList : ObservableCollection<ToDoItem>
+    public class ObservableHashSet : ObservableCollection<ToDoItem>
     {
         private HashSet<ToDoItem> _hashSet;
 
-        public ObservableUniqueItemsList() : base()
+        public ObservableHashSet() : base()
             => _hashSet = new HashSet<ToDoItem>();
 
-        public ObservableUniqueItemsList(IEnumerable<ToDoItem> collection)
+        public ObservableHashSet(IEnumerable<ToDoItem> collection)
             : base(collection)
             => _hashSet = new HashSet<ToDoItem>(collection);
 
@@ -78,17 +76,13 @@ namespace ToDoList.Client.ViewModels
         private const string MESSAGE_DUPLICATION = "Doing the same task twice is unproductive.";
         //here 0 means 'infinity'
         private const int MESSAGE_DELAY_SEC = 5;
-        private const int UNDISPLAIED_LOADING_SEC = 3;
-        private const int SYNC_PERIOD_SEC = 5;
 
-        private ObservableUniqueItemsList _toDoItems;
-        public ObservableUniqueItemsList ToDoItems
+        private ObservableHashSet _toDoItems;
+        public ObservableHashSet ToDoItems
         {
             get => _toDoItems;
             private set => SetValue(ref _toDoItems, value);
         }
-
-        private DispatcherTimer _syncTimer;
 
         private ISync _sync;
 
@@ -99,21 +93,12 @@ namespace ToDoList.Client.ViewModels
             AddCommand = new Command(obj => ToDoAdd(), CanToAdd);
             RemoveCommand = new Command(ToDoRemoveItems);
             ChangeCommand = new Command(SendChangeItem);
-            SyncRetryCommand = new Command(obj => RefreshListStart());
+            SyncRetryCommand = new Command(obj => _sync.StartSync());
 
-            SyncTimerInit();
+            ToDoItems = new ObservableHashSet();
 
-            ToDoItems = new ObservableUniqueItemsList();
             _sync = sync;
-        }
-
-        private void SyncTimerInit()
-        {
-            _syncTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(SYNC_PERIOD_SEC)
-            };
-            _syncTimer.Tick += (s, e) => RefreshListStart();
+            SubscribeOnSyncEvents();
         }
 
         #region Start
@@ -122,7 +107,7 @@ namespace ToDoList.Client.ViewModels
         private void OnStart()
         {
             GetSavedSession();
-            RefreshListStart();
+            _sync.StartSync();
         }
         #endregion
 
@@ -132,7 +117,7 @@ namespace ToDoList.Client.ViewModels
             if (session != null)
             {
                 _sync.RestoreState(session.SyncState);
-                ToDoItems = new ObservableUniqueItemsList(session.List);
+                ToDoItems = new ObservableHashSet(session.List);
             }
         }
 
@@ -140,8 +125,10 @@ namespace ToDoList.Client.ViewModels
         public Command ClosingCommand { get; set; }
 
         private void OnClosing()
-            => new SessionSaver(_sync.GetState(), ToDoItems).SaveJson();
+            => new SessionSaver(_sync.CurrentState, ToDoItems).SaveJson();
         #endregion
+
+        public Command SyncRetryCommand { get; set; }
 
         #region Add item
         public Command AddCommand { get; set; }
@@ -197,52 +184,28 @@ namespace ToDoList.Client.ViewModels
         }
         #endregion
 
-        public Command SyncRetryCommand { get; set; }
+        private void SubscribeOnSyncEvents()
+        {
+            _sync.GotItems += (items) =>
+            {
+                ToDoItems = new ObservableHashSet(items);
+                DisplayLoadingResult(default);
+            };
 
-        private async void RefreshListStart()
-        { 
-            var res = await DisplaySyncState(_sync.GetWhenSynchronisedAsync());
+            _sync.ErrorOccured += DisplayLoadingResult;
 
-            if (!res.IsFailure)
-                ToDoItems = new ObservableUniqueItemsList(res.Value);
-
-            if (res.IsFailure && res.Error.Type != RequestErrorType.ServerError)
-                _syncTimer.Stop();
-            else if (!_syncTimer.IsEnabled) _syncTimer.Start();
+            _sync.LongLoadingStarted += () => LoaderState = LoadingState.Started;
         }
 
-        private async Task RefreshAfterDelay()
+        private void DisplayLoadingResult(RequestError error)
         {
-            await Task.Delay(TimeSpan.FromSeconds(SYNC_PERIOD_SEC));
-            RefreshListStart();
+            FinishLoader(error.Type);
+            UpdateErrorMessage(error);
         }
 
-        private async Task<RequestResult<IEnumerable<ToDoItem>>> DisplaySyncState(Task<RequestResult<IEnumerable<ToDoItem>>> task)
+        private void FinishLoader(RequestErrorType errorType)
         {
-            CheckStartLoader(task);
-
-            var res = await task;
-
-            FinishLoader(res.Error);
-
-            UpdateErrorMessage(res.Error);
-
-            return res;
-        }
-
-        private async void CheckStartLoader(Task task)
-        {
-            if (task.IsCompleted) return;
-
-            await Task.Delay(TimeSpan.FromSeconds(UNDISPLAIED_LOADING_SEC));
-
-            if (!task.IsCompleted)
-                LoaderState = LoadingState.Started;
-        }
-
-        private void FinishLoader(RequestError error)
-        {
-            switch (error.Type)
+            switch (errorType)
             {
                 case RequestErrorType.None:
                     LoaderState = LoadingState.None; break;
