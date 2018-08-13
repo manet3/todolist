@@ -44,6 +44,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -87,14 +88,13 @@
     <Compile Include="Controls\ErrorShowUp.xaml.cs">
       <DependentUpon>ErrorShowUp.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\LoadingVisualiser.xaml.cs">
-      <DependentUpon>LoadingVisualiser.xaml</DependentUpon>
+    <Compile Include="Controls\Loader.xaml.cs">
+      <DependentUpon>Loader.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\ToDoItemControl.xaml.cs">
       <DependentUpon>ToDoItemControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="DataServices\SessionSaver.cs" />
-    <Compile Include="DataServices\SyncMemento.cs" />
     <Compile Include="InjectionConfig.cs" />
     <Compile Include="RequestResult.cs" />
     <Compile Include="ViewModels\ItemViewModel.cs" />
@@ -103,8 +103,9 @@
     <Compile Include="DataServices\RequestSender.cs" />
     <Compile Include="DataServices\Sync.cs" />
     <Compile Include="ViewModels\ToDoViewModel.cs" />
-    <Compile Include="ViewModels\ViewModelLocator.cs" />
-    <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="ViewModels\Common\ToDoViewModelResolver.cs" />
+    <Compile Include="ViewModels\Common\ViewModelBase.cs" />
+    <Compile Include="Views\Attached\WindowAttached.cs" />
     <Compile Include="Views\ToDoWindow.xaml.cs">
       <DependentUpon>ToDoWindow.xaml</DependentUpon>
     </Compile>
@@ -116,7 +117,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\LoadingVisualiser.xaml">
+    <Page Include="Controls\Loader.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

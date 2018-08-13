@@ -26,7 +26,7 @@ namespace ToDoList.Client.Tests
         [TestMethod]
         public void CanFinishQueue()
         {
-            _sync.Restore(new SyncMemento(GetQueue(new[] { ApiAction.Add, ApiAction.Change, ApiAction.Delete })));
+            _sync = new SyncMemento(GetQueue(new[] { ApiAction.Add, ApiAction.Change, ApiAction.Delete })));
             _serverMock.ActionErrors = GetErrored(RequestErrorType.ServerError, ApiAction.Delete, ApiAction.Add);
 
             Action getWhenSync = async () =>

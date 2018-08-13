@@ -7,8 +7,8 @@
     <ProjectGuid>{05E89C44-0A6A-4D8B-94B4-B1C47F5F148B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ToDoList.Client.Test</RootNamespace>
-    <AssemblyName>ToDoList.Client.Test</AssemblyName>
+    <RootNamespace>ToDoList.Client.Tests</RootNamespace>
+    <AssemblyName>ToDoList.Client.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -54,8 +54,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Mock\RequestSenderMock.cs" />
+    <Compile Include="Mock\SyncMock.cs" />
     <Compile Include="SyncTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ToDoViewModelTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

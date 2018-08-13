@@ -5,10 +5,12 @@ using System.Windows.Input;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using ToDoList.Client.Controls;
+using ToDoList.Client.ViewModels.Common;
+
 
 namespace ToDoList.Client.ViewModels
 {
-    class LoaderViewModel : ViewModelBase
+    public class LoaderViewModel : ViewModelBase
     {
         private const int PARTICLES_NUMBER = 5;
 
@@ -16,7 +18,7 @@ namespace ToDoList.Client.ViewModels
 
         public ObservableCollection<Ellipse> Particles { get; set; }
 
-        public ICommand RestartCommand;
+        public ICommand RestartCommand { get; set; }
 
         int _retryAfterSec;
         public int RetryAfterSec
@@ -36,12 +38,23 @@ namespace ToDoList.Client.ViewModels
             }
         }
 
+        private LoadingState _activeState;
+        public LoadingState ActiveState
+        {
+            get => _activeState;
+            set
+            {
+                SetValue(ref _activeState, value);
+                OnActiveStateChanged();
+            }
+        }
+
         public LoaderViewModel()
             => Particles = new ObservableCollection<Ellipse>();
 
-        public void ChangeLoadingState(LoadingState newLoaderState)
+        public void OnActiveStateChanged()
         {
-            switch (newLoaderState)
+            switch (ActiveState)
             {
                 case LoadingState.Started:
                     AutoRestartActive = false;
@@ -73,7 +86,7 @@ namespace ToDoList.Client.ViewModels
 
         public void Restart()
         {
-            ChangeLoadingState(LoadingState.None);
+            ActiveState = LoadingState.None;
 
             if (RestartCommand != null && RestartCommand.CanExecute(this))
                 RestartCommand.Execute(this);

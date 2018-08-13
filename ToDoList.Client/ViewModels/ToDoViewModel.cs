@@ -1,12 +1,14 @@
 ﻿using System;
+using System.Windows;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using ToDoList.Shared;
 using ToDoList.Client.DataServices;
+using ToDoList.Client.ViewModels.Common;
 using ToDoList.Client.Controls;
-using System.Windows;
+using System.Windows.Threading;
 
 namespace ToDoList.Client.ViewModels
 {
@@ -21,12 +23,9 @@ namespace ToDoList.Client.ViewModels
             : base(collection)
             => _hashSet = new HashSet<ToDoItem>(collection);
 
-        public ObservableUniqueItemsList(List<ToDoItem> collection)
-            : this((IEnumerable<ToDoItem>)collection) { }
-
         public new bool Add(ToDoItem item)
         {
-            var isUnique = (_hashSet.Add(item));
+            var isUnique = _hashSet.Add(item);
 
             if (isUnique)
                 base.Add(item);
@@ -41,24 +40,24 @@ namespace ToDoList.Client.ViewModels
         }
     }
 
-    class ToDoViewModel : ViewModelBase
+    public class ToDoViewModel : ViewModelBase
     {
-        string _toDoItemText;
-        public string ToDoItemText
+        string _newItemText;
+        public string NewItemText
         {
-            get => _toDoItemText;
+            get => _newItemText;
             set
             {
-                SetValue(ref _toDoItemText, value);
+                SetValue(ref _newItemText, value);
                 AddCommand.RaiseExecuteChanged();
             }
         }
 
-        string _notification;
-        public string NotificationMessage
+        string _errorMessage;
+        public string ErrorMessage
         {
-            get => _notification;
-            set => SetValue(ref _notification, value);
+            get => _errorMessage;
+            set => SetValue(ref _errorMessage, value);
         }
 
         string _temporalNotification;
@@ -89,37 +88,74 @@ namespace ToDoList.Client.ViewModels
             private set => SetValue(ref _toDoItems, value);
         }
 
+        private DispatcherTimer _syncTimer;
+
         private ISync _sync;
 
         public ToDoViewModel(ISync sync)
         {
-            AddCommand = new Command(ToDoAdd, CanToAdd);
+            StartCommand = new Command(obj => OnStart());
+            ClosingCommand = new Command(obj => OnClosing());
+            AddCommand = new Command(obj => ToDoAdd(), CanToAdd);
             RemoveCommand = new Command(ToDoRemoveItems);
             ChangeCommand = new Command(SendChangeItem);
             SyncRetryCommand = new Command(obj => RefreshListStart());
 
-            Application.Current.Exit += AppExit;
+            SyncTimerInit();
 
             ToDoItems = new ObservableUniqueItemsList();
             _sync = sync;
+        }
 
+        private void SyncTimerInit()
+        {
+            _syncTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(SYNC_PERIOD_SEC)
+            };
+            _syncTimer.Tick += (s, e) => RefreshListStart();
+        }
+
+        #region Start
+        public Command StartCommand { get; set; }
+
+        private void OnStart()
+        {
             GetSavedSession();
             RefreshListStart();
         }
+        #endregion
+
+        private void GetSavedSession()
+        {
+            var session = SessionSaver.FromJson();
+            if (session != null)
+            {
+                _sync.RestoreState(session.SyncState);
+                ToDoItems = new ObservableUniqueItemsList(session.List);
+            }
+        }
+
+        #region Closing
+        public Command ClosingCommand { get; set; }
+
+        private void OnClosing()
+            => new SessionSaver(_sync.GetState(), ToDoItems).SaveJson();
+        #endregion
 
         #region Add item
         public Command AddCommand { get; set; }
 
         public bool CanToAdd()
-            => !string.IsNullOrWhiteSpace(ToDoItemText);
+            => !string.IsNullOrWhiteSpace(NewItemText);
 
-        private void ToDoAdd(object obj)
+        private void ToDoAdd()
         {
-            var newItem = new ToDoItem { Name = ToDoItemText.Trim(), IsChecked = false };
+            var newItem = new ToDoItem { Name = NewItemText.Trim(), IsChecked = false };
 
             if (ToDoItems.Add(newItem))
             {
-                ToDoItemText = "";
+                NewItemText = "";
                 _sync.Add(newItem);
             }
             else
@@ -164,15 +200,15 @@ namespace ToDoList.Client.ViewModels
         public Command SyncRetryCommand { get; set; }
 
         private async void RefreshListStart()
-        {
-            var res = await HandleSyncState(_sync.GetWhenSynchronisedAsync());
+        { 
+            var res = await DisplaySyncState(_sync.GetWhenSynchronisedAsync());
 
-            if (res.IsFailure)
-                return;
+            if (!res.IsFailure)
+                ToDoItems = new ObservableUniqueItemsList(res.Value);
 
-            ToDoItems = new ObservableUniqueItemsList(res.Value);
-
-            await RefreshAfterDelay();
+            if (res.IsFailure && res.Error.Type != RequestErrorType.ServerError)
+                _syncTimer.Stop();
+            else if (!_syncTimer.IsEnabled) _syncTimer.Start();
         }
 
         private async Task RefreshAfterDelay()
@@ -181,17 +217,15 @@ namespace ToDoList.Client.ViewModels
             RefreshListStart();
         }
 
-        private async Task<RequestResult<IEnumerable<ToDoItem>>> HandleSyncState(Task<RequestResult<IEnumerable<ToDoItem>>> task)
+        private async Task<RequestResult<IEnumerable<ToDoItem>>> DisplaySyncState(Task<RequestResult<IEnumerable<ToDoItem>>> task)
         {
             CheckStartLoader(task);
 
             var res = await task;
 
             FinishLoader(res.Error);
-            UpdateErrorMessage(res.Error);
 
-            if (res.Error.Type == RequestErrorType.ServerError)
-                await RefreshAfterDelay();
+            UpdateErrorMessage(res.Error);
 
             return res;
         }
@@ -222,21 +256,9 @@ namespace ToDoList.Client.ViewModels
         private void UpdateErrorMessage(RequestError error)
         {
             if (error.Type == RequestErrorType.None)
-                NotificationMessage = string.Empty;
-            else NotificationMessage = error.Message;
-        }
-
-        private void AppExit(object sender, ExitEventArgs e)
-            => new SessionSaver(_sync.Save(), _sync.MementoType, ToDoItems).SaveJson();
-
-        private void GetSavedSession()
-        {
-            var session = SessionSaver.FromJson(_sync.MementoType);
-            if (session != null)
-            {
-                _sync.Restore(session.SyncMemento);
-                ToDoItems = new ObservableUniqueItemsList(session.List);
-            }
+                ErrorMessage = string.Empty;
+            else
+                ErrorMessage = error.Message;
         }
     }
 }

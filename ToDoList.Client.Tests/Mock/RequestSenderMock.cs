@@ -18,7 +18,7 @@ namespace ToDoList.Client.Tests.Mock
 
     class RequestSenderMock : IRequestSender
     {
-        private ToDoItem[] _itemsStorage = new ToDoItem[10].Select(x => new ToDoItem()).ToArray();
+        private IEnumerable<ToDoItem> _itemsStorage = new ToDoItem[10].Select(x => new ToDoItem());
 
         public ActionErrorMock[] ActionErrors;
 
@@ -26,7 +26,8 @@ namespace ToDoList.Client.Tests.Mock
         {
             var reqError = ActionErrors.FirstOrDefault(e => e.Action == ApiAction.List);
             if (reqError == null)
-                return RequestResult.Ok<IEnumerable<ToDoItem>>(_itemsStorage);
+                return RequestResult.Ok(_itemsStorage);
+
             return RequestResult.Fail<IEnumerable<ToDoItem>>(reqError.Error);
         }
 
@@ -35,6 +36,7 @@ namespace ToDoList.Client.Tests.Mock
             var sendError = ActionErrors?.FirstOrDefault(e => e.Action == action);
             if (sendError == null)
                 return RequestResult.Ok();
+
             return RequestResult.Fail(sendError.Error);
         }
     }

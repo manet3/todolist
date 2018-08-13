@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace ToDoList.Client.ViewModels
+namespace ToDoList.Client.ViewModels.Common
 {
     public abstract class ViewModelBase : INotifyPropertyChanged
     {

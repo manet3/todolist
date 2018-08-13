@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ToDoList.Shared;
@@ -23,10 +22,9 @@ namespace ToDoList.Client.DataServices
 
         Task<RequestResult<IEnumerable<ToDoItem>>> GetWhenSynchronisedAsync();
 
-        Type MementoType { get; }
+        object GetState();
 
-        object Save();
-        void Restore(object memento);
+        void RestoreState(object state);
     }
 
     public class Sync : ISync
@@ -37,8 +35,6 @@ namespace ToDoList.Client.DataServices
 
         public Sync(IRequestSender req)
             => _req = req;
-
-        public Type MementoType => typeof(SyncMemento);
 
         public void Add(ToDoItem item)
             => _failedActions.Enqueue(new ItemSendAction(item, ApiAction.Add));
@@ -77,13 +73,12 @@ namespace ToDoList.Client.DataServices
             return RequestResult.Ok();
         }
 
-        public object Save()
-            => new SyncMemento(_failedActions);
-
-        public void Restore(object memento)
+        public void RestoreState(object state)
         {
-            if (memento is SyncMemento syncMemento)
-                _failedActions = syncMemento.Actions;
+            if (state is Queue<ItemSendAction> actions)
+                _failedActions = new Queue<ItemSendAction>(actions);
         }
+
+        public object GetState() => _failedActions;
     }
 }

@@ -10,9 +10,9 @@
 
     public struct RequestError
     {
-        public string Message;
+        public readonly string Message;
 
-        public RequestErrorType Type;
+        public readonly RequestErrorType Type;
 
         public RequestError(string message, RequestErrorType errorType)
             => (Message, Type) = (message, errorType);

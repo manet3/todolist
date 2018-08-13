@@ -4,10 +4,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:ToDoList.Client.Controls"
+        xmlns:attached="clr-namespace:ToDoList.Client.Views.Attached"
         mc:Ignorable="d"
         Title="ToDo" 
         Height="400" Width="300"
-        DataContext="{Binding ToDoViewModel, Source={StaticResource ViewModelLocator}}">
+        DataContext="{Binding ToDoViewModel, Source={StaticResource ToDoViewModelResolver}}"
+        attached:WindowAttached.LoadedCommand="{Binding StartCommand}"
+        attached:WindowAttached.ClosingCommand="{Binding ClosingCommand}">
     <Window.Style>
         <Style TargetType="{x:Type Window}">
             <Setter Property="WindowStyle" Value="None"/>
@@ -62,7 +65,7 @@
         </Grid.ColumnDefinitions>
 
         <TextBox Grid.Column="1" Margin="10,5,5,5" 
-                 Text="{Binding ToDoItemText, UpdateSourceTrigger=PropertyChanged}"/>
+                 Text="{Binding NewItemText, UpdateSourceTrigger=PropertyChanged}"/>
 
         <Grid VerticalAlignment="Center" Grid.Column="2">
             <Grid.RowDefinitions>
@@ -96,7 +99,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <controls:ErrorShowUp ErrorText ="{Binding TemporalNotificationMessage}"/>
-            <controls:ErrorShowUp Grid.Row="1" ErrorText ="{Binding NotificationMessage}"/>
+            <controls:ErrorShowUp Grid.Row="1" ErrorText ="{Binding ErrorMessage}"/>
         </Grid>
 
         <ListView Name="todoList" 
@@ -114,7 +117,7 @@
             </ListView.ItemTemplate>
         </ListView>
 
-        <controls:LoadingVisualiser Background="Transparent" 
+        <controls:Loader Background="Transparent" 
                                     ActiveState="{Binding LoaderState}" 
                                     RestartCommand="{Binding SyncRetryCommand}"
                                     Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" 
