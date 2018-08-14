@@ -4,16 +4,23 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using ToDoList.Client.Controls;
+using ToDoList.Client.ViewModels.Common;
+
 
 namespace ToDoList.Client.ViewModels
 {
-    class LoaderViewModel : ViewModelBase
+    public class LoaderViewModel : ViewModelBase
     {
         private const int PARTICLES_NUMBER = 5;
 
+        private const int RESTART_SEC = 10;
+
+        private const int UNDISLAIED_LOADING_SEC = 1;
+
         public ObservableCollection<Ellipse> Particles { get; set; }
 
-        public ICommand RestartCommand;
+        public ICommand RestartCommand { get; set; }
 
         int _retryAfterSec;
         public int RetryAfterSec
@@ -29,24 +36,80 @@ namespace ToDoList.Client.ViewModels
             set
             {
                 SetValue(ref _autoRestart, value);
-                if (_autoRestart)
-                    RestartActivate();
+                RestartCountdown();
             }
+        }
+
+
+        private bool _toBeSetStarted;
+        private LoadingState _activeState;
+        public LoadingState ActiveState
+        {
+            get => _activeState;
+            set
+            {
+                if (value == LoadingState.Started)
+                {
+                    SetStartedAfterDelay();
+                    return;
+                }
+                _toBeSetStarted = false;
+                SetActiveState(value);
+            }
+        }
+
+        public async void SetStartedAfterDelay()
+        {
+            _toBeSetStarted = true;
+            await Task.Delay(TimeSpan.FromSeconds(UNDISLAIED_LOADING_SEC));
+            if (_toBeSetStarted)
+                SetActiveState(LoadingState.Started);
+        }
+
+        public void SetActiveState(LoadingState value)
+        {
+            SetValue(ref _activeState, value, nameof(ActiveState));
+            OnActiveStateChanged();
         }
 
         public LoaderViewModel()
             => Particles = new ObservableCollection<Ellipse>();
 
-        private async void RestartActivate()
+        public void OnActiveStateChanged()
         {
-            for (int i = 10; i >= 0; i--)
+            switch (ActiveState)
             {
+                case LoadingState.Started:
+                    AutoRestartActive = false;
+                    AddParticles();
+                    break;
+                case LoadingState.None:
+                case LoadingState.Failed:
+                    AutoRestartActive = false;
+                    RemoveParticles();
+                    break;
+                case LoadingState.Paused:
+                    AutoRestartActive = true;
+                    RemoveParticles();
+                    break;
+            }
+        }
+
+        private async void RestartCountdown()
+        {
+            for (int i = RESTART_SEC; i >= 0; i--)
+            {
+                if (!AutoRestartActive)
+                    return;
                 RetryAfterSec = i;
                 await Task.Delay(new TimeSpan(0, 0, 1));
-
-                //when canceled
-                if (!AutoRestartActive) return;
             }
+            Restart();
+        }
+
+        public void Restart()
+        {
+            ActiveState = LoadingState.None;
 
             if (RestartCommand != null && RestartCommand.CanExecute(this))
                 RestartCommand.Execute(this);

@@ -65,37 +65,46 @@ namespace ToDoList.Server.Database
 
                 "Failed to get DB table");
 
-        public Result UpdateAll(IEnumerable<ItemDbModel> item_set)
+        public Result UpdateItem(ItemDbModel item)
             => _exceptionHandle.SqlExceptionHandler(() =>
             {
-                var n = _dbConn.DeleteAll<ItemDbModel>();
-                _dbConn.InsertAll(item_set);
+                var dbItem = _dbConn.Single<ItemDbModel>((x) => x.Name == item.Name);
 
-                return Result.Ok(n);
+                if (dbItem == null)
+                    return Result.Fail("Item not found");
+
+                if (item.Timestamp >= dbItem.Timestamp)
+                    _dbConn.Update<ItemDbModel>(
+                        new
+                        {
+                            IsChecked = item.IsChecked,
+                            Timestamp = item.Timestamp
+                        },
+                        where: x => x.Name == item.Name);
+
+                return Result.Ok();
             },
-                "Failed to rewrite DB table");
-
-        public Result UpdateItem(ItemDbModel item)
-            => _exceptionHandle.SqlExceptionHandler(
-
-                () => !_dbConn.Exists<ItemDbModel>(new { Name = item.Name })
-                ? Result.Fail("Item not found")
-                : Result.Ok(_dbConn.Update<ItemDbModel>(new { Name = item.Name, IsChecked = item.IsChecked })),
 
                 "Failed to update item");
 
-        public Result DeleteByName(string name)
-            => _exceptionHandle.SqlExceptionHandler(
+        public Result DeleteById(ulong id, DateTime timestamp)
+            => _exceptionHandle.SqlExceptionHandler(() =>
+            {
+                var dbItem = _dbConn.Single<ItemDbModel>(x => x.Id == id);
 
-                () => !_dbConn.Exists<ItemDbModel>(new { Name = name })
-                ? Result.Fail("Item not found")
-                : Result.Ok(_dbConn.Delete<ItemDbModel>((x) => x.Name == name)),
+                if (dbItem == null)
+                    return Result.Fail("Item not found");
 
+                if (timestamp >= dbItem.Timestamp)
+                    _dbConn.Delete<ItemDbModel>(x => x.Id == id);
+
+                return Result.Ok();
+            },
                 "Failed to delete item");
 
         public void Dispose()
         {
-            _dbConn.Dispose();
+            _dbConn?.Dispose();
             _dbConn = null;
         }
     }

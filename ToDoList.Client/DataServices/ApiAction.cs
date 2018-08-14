@@ -10,14 +10,24 @@ namespace ToDoList.Client.DataServices
         public ApiAction(HttpMethod method, string name)
             => (Method, Name) = (method, name);
 
-        public static ApiAction List = new ApiAction(HttpMethod.Get, "list");
+        public static ApiAction List => new ApiAction(HttpMethod.Get, "list");
 
-        public static ApiAction Change = new ApiAction(HttpMethod.Put, "change");
+        public static ApiAction Change => new ApiAction(HttpMethod.Put, "change");
 
-        public static ApiAction Rewrite = new ApiAction(HttpMethod.Put, "rewrite");
+        public static ApiAction Add => new ApiAction(HttpMethod.Post, "add");
 
-        public static ApiAction Add = new ApiAction(HttpMethod.Post, "add");
+        public static ApiAction Delete => new ApiAction(HttpMethod.Delete, "delete");
 
-        public static ApiAction Delete = new ApiAction(HttpMethod.Delete, "delete");
+        public static bool operator ==(ApiAction action1, ApiAction action2)
+            => action1.Equals(action2);
+
+        public static bool operator !=(ApiAction action1, ApiAction action2)
+            => !action1.Equals(action2);
+
+        public override bool Equals(object obj)
+            => obj is ApiAction action && action.Name.Equals(Name);
+
+        public override int GetHashCode()
+            => Name.GetHashCode();
     }
 }

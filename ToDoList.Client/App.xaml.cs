@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using System.Windows;
+using ToDoList.Client.DataServices;
+using ToDoList.Client.ViewModels;
+using Unity;
 
 namespace ToDoList.Client
 {
@@ -13,5 +11,16 @@ namespace ToDoList.Client
     /// </summary>
     public partial class App : Application
     {
+        public App()
+        {
+            //var currentProc = Process.GetCurrentProcess();
+
+            //if (Process.GetProcessesByName(currentProc.ProcessName).Any())
+            //    currentProc.Kill();
+
+            InjectionConfig.RegisterDataServices();
+
+            InitializeComponent();
+        }
     }
 }

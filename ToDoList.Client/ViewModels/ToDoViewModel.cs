@@ -5,30 +5,66 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using ToDoList.Shared;
 using ToDoList.Client.DataServices;
-using CSharpFunctionalExtensions;
+using ToDoList.Client.ViewModels.Common;
 using ToDoList.Client.Controls;
 
 namespace ToDoList.Client.ViewModels
 {
-    class ToDoViewModel : ViewModelBase
+    public class ObservableHashSet : ObservableCollection<ToDoItem>
     {
-        string _toDoItemText;
-        public string ToDoItemText
+        private HashSet<ToDoItem> _hashSet;
+
+        public ObservableHashSet() : base()
+            => _hashSet = new HashSet<ToDoItem>();
+
+        public ObservableHashSet(IEnumerable<ToDoItem> collection)
+            : base(collection)
+            => _hashSet = new HashSet<ToDoItem>(collection);
+
+        public new bool Add(ToDoItem item)
         {
-            get => _toDoItemText;
+            var isUnique = _hashSet.Add(item);
+
+            if (isUnique)
+                base.Add(item);
+
+            return isUnique;
+        }
+
+        public new void Remove(ToDoItem item)
+        {
+            base.Remove(item);
+            _hashSet.Remove(item);
+        }
+    }
+
+    public class ToDoViewModel : ViewModelBase
+    {
+        string _newItemText;
+        public string NewItemText
+        {
+            get => _newItemText;
             set
             {
-                SetValue(ref _toDoItemText, value);
+                SetValue(ref _newItemText, value);
                 AddCommand.RaiseExecuteChanged();
             }
         }
 
-        string _notification;
-        public string NotificationMessage
+        string _errorMessage;
+        public string ErrorMessage
         {
-            get => _notification;
-            set => SetValue(ref _notification, value);
+            get => _errorMessage;
+            set => SetValue(ref _errorMessage, value);
         }
+
+        string _temporalNotification;
+        public string TemporalNotificationMessage
+        {
+            get => _temporalNotification;
+            set => SetValue(ref _temporalNotification, value);
+        }
+
 
         private LoadingState _loaderState;
         public LoadingState LoaderState
@@ -37,91 +73,103 @@ namespace ToDoList.Client.ViewModels
             set => SetValue(ref _loaderState, value);
         }
 
-        private const string MESSAGE_CLEAR = "";
         private const string MESSAGE_DUPLICATION = "Doing the same task twice is unproductive.";
+        //here 0 means 'infinity'
+        private const int MESSAGE_DELAY_SEC = 5;
 
-        private ObservableCollection<ToDoItem> _toDoItems;
-        public ObservableCollection<ToDoItem> ToDoItems
+        private ObservableHashSet _toDoItems;
+        public ObservableHashSet ToDoItems
         {
             get => _toDoItems;
             private set => SetValue(ref _toDoItems, value);
         }
 
-        private HashSet<ToDoItem> _itemsData = new HashSet<ToDoItem>();
+        private ISync _sync;
 
-        private DataServicesManager _dataManager;
-
-        public ToDoViewModel()
+        public ToDoViewModel(ISync sync)
         {
-            ToDoItems = new ObservableCollection<ToDoItem>();
-            _dataManager = new DataServicesManager();
-
-            AddCommand = new Command(ToDoAdd, CanToAdd);
+            StartCommand = new Command(obj => OnStart());
+            ClosingCommand = new Command(obj => OnClosing());
+            AddCommand = new Command(obj => ToDoAdd(), CanToAdd);
             RemoveCommand = new Command(ToDoRemoveItems);
             ChangeCommand = new Command(SendChangeItem);
-            FinishingCommand = new Command(SaveOnFinishing);
-            SyncRetryCommand = new Command(SyncRetry);
+            SyncRetryCommand = new Command(obj => _sync.StartSync());
 
-            GetListAsync();
+            ToDoItems = new ObservableHashSet();
+
+            _sync = sync;
+            SubscribeOnSyncEvents();
         }
 
-        private async void GetListAsync()
+        #region Start
+        public Command StartCommand { get; set; }
+
+        private void OnStart()
         {
-            var res = await DisplaySync(_dataManager.GetAsync());
-
-            if (res != null)
-                ToDoItems = new ObservableCollection<ToDoItem>(res);
-            else
-                ToDoItems = new ObservableCollection<ToDoItem>(_dataManager.GetLocal());
-        }
-
-        #region Restart
-        public Command SyncRetryCommand { get; set; }
-
-        private async void SyncRetry(object obj)
-        {
-            if (ToDoItems.Count == 0)
-                GetListAsync();
-            else
-                await DisplaySync(_dataManager.UpdateAllAsync(ToDoItems));
+            GetSavedSession();
+            _sync.StartSync();
         }
         #endregion
+
+        private void GetSavedSession()
+        {
+            var session = SessionSaver.FromJson();
+            if (session != null)
+            {
+                _sync.RestoreState(session.SyncState);
+                ToDoItems = new ObservableHashSet(session.List);
+            }
+        }
+
+        #region Closing
+        public Command ClosingCommand { get; set; }
+
+        private void OnClosing()
+            => new SessionSaver(_sync.CurrentState, ToDoItems).SaveJson();
+        #endregion
+
+        public Command SyncRetryCommand { get; set; }
 
         #region Add item
         public Command AddCommand { get; set; }
 
         public bool CanToAdd()
-            => !string.IsNullOrWhiteSpace(ToDoItemText);
+            => !string.IsNullOrWhiteSpace(NewItemText);
 
-        private async void ToDoAdd(object obj)
+        private void ToDoAdd()
         {
-            var newItem = new ToDoItem { Name = ToDoItemText.Trim(), IsChecked = false };
+            var newItem = new ToDoItem { Name = NewItemText.Trim(), IsChecked = false };
 
-            if (_itemsData.Add(newItem))
+            if (ToDoItems.Add(newItem))
             {
-                ToDoItems.Add(newItem);
-                ToDoItemText = "";
+                NewItemText = "";
+                _sync.Add(newItem);
             }
             else
             {
-                ShowTemporalMessageAsync(MESSAGE_DUPLICATION);
+                ShowTemporalMessage(MESSAGE_DUPLICATION);
             }
-
-            await DisplaySync(_dataManager.AddAsync(newItem));
         }
         #endregion
+
+        private async void ShowTemporalMessage(string message)
+        {
+            TemporalNotificationMessage = message;
+            await Task.Delay(TimeSpan.FromSeconds(MESSAGE_DELAY_SEC));
+            TemporalNotificationMessage = string.Empty;
+        }
 
         #region Change item
         public Command ChangeCommand { get; set; }
 
-        private async void SendChangeItem(object obj)
-            => await DisplaySync(_dataManager.UpdateAsync((ToDoItem)obj));
+        private void SendChangeItem(object obj)
+            => _sync.Update((ToDoItem)obj);
         #endregion
 
         #region Remove items
         public Command RemoveCommand { get; set; }
 
-        private async void ToDoRemoveItems(object obj)
+        private void ToDoRemoveItems(object obj)
         {
             var selectedItems = (IList)obj;
             var selectedArray = new ToDoItem[selectedItems.Count];
@@ -129,52 +177,47 @@ namespace ToDoList.Client.ViewModels
             selectedItems.CopyTo(selectedArray, 0);
 
             foreach (var item in selectedArray)
+            {
                 ToDoItems.Remove(item);
-
-            await SendRemoveItemsAsync(selectedArray);
-        }
-
-        private async Task SendRemoveItemsAsync(ToDoItem[] items)
-        {
-            foreach (var item in items)
-            {
-                await DisplaySync(_dataManager.DeleteByNameAsync(item.Name));
-                if (LoaderState == LoadingState.Failed)
-                    return;
+                _sync.Delete(item);
             }
         }
         #endregion
 
-        #region Finishing
-        public Command FinishingCommand { get; set; }
-
-        private void SaveOnFinishing(object obj)
-            => _dataManager.SaveIfNotSynchronised(ToDoItems);
-        #endregion
-
-        private async Task<T> DisplaySync<T>(Task<Result<T>> task)
+        private void SubscribeOnSyncEvents()
         {
-            if (!task.IsCompleted)
-                LoaderState = LoadingState.Started;
+            _sync.GotItems += (items) => ToDoItems = new ObservableHashSet(items);          
 
-            var res = await task;
+            _sync.LoadingSucceeded += OnLoadingSucceeded;
 
-            if (res.IsFailure)
+            _sync.ErrorOccured += OnLoadingFailed;
+
+            _sync.LoadingStarted += () => LoaderState = LoadingState.Started;
+        }
+
+        private void OnLoadingSucceeded()
+        {
+            FinishLoader(RequestErrorType.None);
+            ErrorMessage = string.Empty;
+        }
+
+        private void OnLoadingFailed(RequestError error)
+        {
+            FinishLoader(error.Type);
+            ErrorMessage = error.Message;
+        }
+
+        private void FinishLoader(RequestErrorType errorType)
+        {
+            switch (errorType)
             {
-                (NotificationMessage, LoaderState) = (res.Error, LoadingState.Failed);
-                return default;
+                case RequestErrorType.None:
+                    LoaderState = LoadingState.None; break;
+                case RequestErrorType.NoConnection:
+                    LoaderState = LoadingState.Failed; break;
+                case RequestErrorType.Cancelled:
+                    LoaderState = LoadingState.Paused; break;
             }
-            (NotificationMessage, LoaderState) = (string.Empty, LoadingState.None);
-            return res.Value;
         }
-
-        private async void ShowTemporalMessageAsync(string message)
-        {
-            NotificationMessage = message;
-            await Task.Delay(new TimeSpan(0, 0, 5));
-            NotificationMessage = MESSAGE_CLEAR;
-        }
-
-
     }
 }

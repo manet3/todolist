@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="ToDoList.Client.Controls.LoadingVisualiser"
+﻿<UserControl x:Class="ToDoList.Client.Controls.Loader"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -7,17 +7,6 @@
              mc:Ignorable="d" 
              Name="loadingControl"
              d:DesignHeight="300" d:DesignWidth="300">
-    
-    <UserControl.Style>
-        <Style TargetType="UserControl">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding ActiveState, RelativeSource={RelativeSource Self}}" 
-                             Value="None">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-    </UserControl.Style>
     
     <UserControl.Resources>
         <Storyboard x:Key="ellipseMove" RepeatBehavior="Forever">
@@ -50,10 +39,7 @@
             <Setter Property="Fill" Value="DimGray"></Setter>
             <Setter Property="Canvas.Top" Value="2.5"></Setter>
             <Style.Triggers>
-                <!--No other way of binding can be used-->
-                <DataTrigger Binding="{Binding ActiveState, 
-                    RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                     Value="Started">
+                <DataTrigger Binding="{Binding ActiveState}" Value="Started">
                     <DataTrigger.EnterActions>
                         <BeginStoryboard Storyboard="{StaticResource ellipseMove}"/>
                     </DataTrigger.EnterActions>
@@ -63,10 +49,22 @@
     </UserControl.Resources>
 
     <Grid Name="MainGrid">
+
+        <!--in case of setting Datacontext on the controll level binding will not work-->
         <Grid.DataContext>
             <viewmodels:LoaderViewModel/>
         </Grid.DataContext>
-        
+
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding ActiveState}"  Value="None">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
+
         <ItemsControl ItemsSource="{Binding Particles}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -78,12 +76,11 @@
         <StackPanel Orientation="Horizontal">
             
             <Button Foreground="SlateGray" 
-                Command="{Binding RestartButtonPressed, 
-            RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                FontWeight="SemiBold" 
-                RenderTransformOrigin="0.5,0.5"
-                Height="22" Width="60"
-                HorizontalAlignment="Left">Try again
+                    Command="{Binding RestartCommand}"
+                    FontWeight="SemiBold" 
+                    RenderTransformOrigin="0.5,0.5"
+                    Height="22" Width="60"
+                    HorizontalAlignment="Left">Try again
                 
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
@@ -108,11 +105,14 @@
                                 </Setter>
                             </Trigger>
 
-                            <DataTrigger Binding="{Binding ActiveState, 
-                    RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                     Value="Failed">
+                            <DataTrigger Binding="{Binding ActiveState}" Value="Failed">
                                 <Setter TargetName="btBorder" Property="Visibility" Value="Visible"/>
                             </DataTrigger>
+
+                            <DataTrigger Binding="{Binding ActiveState}" Value="Paused">
+                                <Setter TargetName="btBorder" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Button.Template>
@@ -151,9 +151,7 @@
                 <ToggleButton.Style>
                     <Style TargetType="ToggleButton">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding ActiveState, 
-                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        Value="Started">
+                            <DataTrigger Binding="{Binding ActiveState}" Value="Started">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                         </Style.Triggers>

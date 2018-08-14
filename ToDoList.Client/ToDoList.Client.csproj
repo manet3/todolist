@@ -36,14 +36,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CSharpFunctionalExtensions, Version=1.10.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CSharpFunctionalExtensions.1.10.0\lib\net461\CSharpFunctionalExtensions.dll</HintPath>
+    <Reference Include="CommonServiceLocator, Version=2.0.3.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.5.8.6\lib\net47\CommonServiceLocator.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -52,6 +53,27 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="Unity.Abstractions, Version=3.3.0.0, Culture=neutral, PublicKeyToken=6d32ff45e0ccc69f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.5.8.6\lib\net47\Unity.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Configuration, Version=5.2.1.0, Culture=neutral, PublicKeyToken=6d32ff45e0ccc69f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.5.8.6\lib\net47\Unity.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Container, Version=5.8.6.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.5.8.6\lib\net47\Unity.Container.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Interception, Version=5.5.1.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.5.8.6\lib\net47\Unity.Interception.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Interception.Configuration, Version=5.1.4.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.5.8.6\lib\net47\Unity.Interception.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.RegistrationByConvention, Version=2.1.5.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.5.8.6\lib\net47\Unity.RegistrationByConvention.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.ServiceLocation, Version=2.1.2.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.5.8.6\lib\net47\Unity.ServiceLocation.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
@@ -62,24 +84,28 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Bechaviours\WindowBechaviour.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Controls\ErrorShowUp.xaml.cs">
       <DependentUpon>ErrorShowUp.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\LoadingVisualiser.xaml.cs">
-      <DependentUpon>LoadingVisualiser.xaml</DependentUpon>
+    <Compile Include="Controls\Loader.xaml.cs">
+      <DependentUpon>Loader.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\ToDoItemControl.xaml.cs">
       <DependentUpon>ToDoItemControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="DataServices\ListJsonSaver.cs" />
+    <Compile Include="DataServices\SessionSaver.cs" />
+    <Compile Include="InjectionConfig.cs" />
+    <Compile Include="RequestResult.cs" />
+    <Compile Include="ViewModels\ItemViewModel.cs" />
     <Compile Include="ViewModels\LoaderViewModel.cs" />
     <Compile Include="DataServices\ApiAction.cs" />
-    <Compile Include="DataServices\Synchronisator.cs" />
-    <Compile Include="DataServices\DataServicesManager.cs" />
+    <Compile Include="DataServices\RequestSender.cs" />
+    <Compile Include="DataServices\Sync.cs" />
     <Compile Include="ViewModels\ToDoViewModel.cs" />
-    <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="ViewModels\Common\ToDoViewModelResolver.cs" />
+    <Compile Include="ViewModels\Common\ViewModelBase.cs" />
+    <Compile Include="Views\Attached\WindowAttached.cs" />
     <Compile Include="Views\ToDoWindow.xaml.cs">
       <DependentUpon>ToDoWindow.xaml</DependentUpon>
     </Compile>
@@ -91,7 +117,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\LoadingVisualiser.xaml">
+    <Page Include="Controls\Loader.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

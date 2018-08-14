@@ -1,6 +1,8 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Linq;
 
 namespace ToDoList.Client.Controls
 {
@@ -9,8 +11,6 @@ namespace ToDoList.Client.Controls
     /// </summary>
     public partial class ErrorShowUp : UserControl, INotifyPropertyChanged
     {
-        public static DependencyProperty ErrorTextProperty;
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public string ErrorText
@@ -19,17 +19,21 @@ namespace ToDoList.Client.Controls
             set => SetValue(ErrorTextProperty, value);
         }
 
-        private bool _gotMessage;
+        public string LastError
+        {
+            get => ErrorStack.Any() 
+                ? ErrorStack.Peek()
+                : string.Empty;
+        }
+
         public bool GotMessage
         {
-            get => _gotMessage;
-            set
-            {
-                _gotMessage = value;
-                PropertyChanged?.Invoke(this,
-                    new PropertyChangedEventArgs(nameof(GotMessage)));
-            }
+            get => ErrorStack.Any();
         }
+
+        public static DependencyProperty ErrorTextProperty;
+
+        public Stack<string> ErrorStack = new Stack<string>();
 
         static ErrorShowUp()
         {
@@ -43,8 +47,22 @@ namespace ToDoList.Client.Controls
         private static void OnMessageGot(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var newVal = (string)e.NewValue;
-            ((ErrorShowUp)d).GotMessage = newVal != null && newVal != "";
+
+            var obj = (ErrorShowUp)d;
+
+            if (string.IsNullOrEmpty(newVal))
+            {
+                //using empty message parameter to delete the showed one
+                if (obj.ErrorStack.Any())
+                    obj.ErrorStack.Pop();
+            }
+            else obj.ErrorStack.Push(newVal);
+            obj.PropertyChange(nameof(GotMessage));
+            obj.PropertyChange(nameof(LastError));
         }
+
+        private void PropertyChange(string property)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
 
         public ErrorShowUp()
         {
