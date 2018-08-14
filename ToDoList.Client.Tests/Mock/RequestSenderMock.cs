@@ -6,27 +6,28 @@ using ToDoList.Shared;
 
 namespace ToDoList.Client.Tests.Mock
 {
-    public class ActionErrorMock
+    public class ErrorOnAction
     {
         public ApiAction Action;
 
         public RequestError Error;
 
-        public ActionErrorMock(ApiAction action, RequestError error)
+        public ErrorOnAction(ApiAction action, RequestErrorType errorType)
+            => (Action, Error) = (action, new RequestError(string.Empty, errorType));
+
+        public ErrorOnAction(ApiAction action, RequestError error)
             => (Action, Error) = (action, error);
     }
 
     class RequestSenderMock : IRequestSender
     {
-        private IEnumerable<ToDoItem> _itemsStorage = new ToDoItem[10].Select(x => new ToDoItem());
-
-        public ActionErrorMock[] ActionErrors;
+        public ErrorOnAction[] ActionErrors;
 
         public async Task<RequestResult<IEnumerable<ToDoItem>>> GetTasksAsync()
         {
-            var reqError = ActionErrors.FirstOrDefault(e => e.Action == ApiAction.List);
+            var reqError = ActionErrors?.FirstOrDefault(e => e.Action == ApiAction.List);
             if (reqError == null)
-                return RequestResult.Ok(_itemsStorage);
+                return RequestResult.Ok<IEnumerable<ToDoItem>>(new ToDoItem[10]);
 
             return RequestResult.Fail<IEnumerable<ToDoItem>>(reqError.Error);
         }

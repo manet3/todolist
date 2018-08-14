@@ -6,6 +6,7 @@ using FluentAssertions;
 using ToDoList.Shared;
 using System.Linq;
 using System;
+using System.Reflection;
 
 namespace ToDoList.Client.Tests
 {
@@ -15,6 +16,14 @@ namespace ToDoList.Client.Tests
         private Sync _sync;
 
         private RequestSenderMock _serverMock;
+
+        private ErrorOnAction[] _regularErrors = new[]{
+                new ErrorOnAction(ApiAction.Add, RequestErrorType.NoConnection),
+                new ErrorOnAction(ApiAction.Change, RequestErrorType.Cancelled),
+                new ErrorOnAction(ApiAction.Delete, RequestErrorType.Cancelled)};
+
+        private ErrorOnAction[] _serverErrors
+            = new[] { new ErrorOnAction(ApiAction.Add, RequestErrorType.ServerError) };
 
         [TestInitialize]
         public void MakeSync()
@@ -26,24 +35,96 @@ namespace ToDoList.Client.Tests
         [TestMethod]
         public void CanFinishQueue()
         {
-            _sync = new SyncMemento(GetQueue(new[] { ApiAction.Add, ApiAction.Change, ApiAction.Delete })));
-            _serverMock.ActionErrors = GetErrored(RequestErrorType.ServerError, ApiAction.Delete, ApiAction.Add);
+            SendRequests();
 
-            Action getWhenSync = async () =>
-            {
-                RequestErrorType errorType;
-                do errorType = (await _sync.GetWhenSynchronisedAsync()).Error.Type;
-                while (errorType == RequestErrorType.ServerError);
-            };
-            getWhenSync();
+            SyncRepete(1);
 
-            ((SyncMemento)_sync.Save()).Actions.Should().HaveCountLessOrEqualTo(0);
+            ((Queue<ItemSendAction>)_sync.CurrentState).Should().HaveCount(0);
         }
 
-        private ActionErrorMock[] GetErrored(RequestErrorType typeOfError, params ApiAction[] toError)
-            => toError.Select(a => new ActionErrorMock(a,
-                new RequestError(string.Empty, typeOfError)))
-                .ToArray();
+        [TestMethod]
+        public void CannotFinishQueueWhenErrors()
+        {
+            _serverMock.ActionErrors = _regularErrors;
+            SendRequests();
+
+            SyncRepete(3);
+
+            ((Queue<ItemSendAction>)_sync.CurrentState).Should().HaveCount(3);
+        }
+
+        [TestMethod]
+        public void CanFinishQueueWhenServerErrors()
+        {
+            _serverMock.ActionErrors = _serverErrors;
+            SendRequests();
+
+            SyncRepete(2);
+
+            ((Queue<ItemSendAction>)_sync.CurrentState).Should().HaveCount(0);
+        }
+
+        [TestMethod]
+        public void CanGet()
+        {
+            ToDoItem[] items = new ToDoItem[0];
+            _sync.GotItems += (gotItems) => items = gotItems.ToArray();
+            SendRequests();
+
+            SyncRepete(3);
+
+            items.Should().HaveCount(10);
+        }
+
+        [TestMethod]
+        public void CanGetWhenServerErrors()
+        {
+            _serverMock.ActionErrors = _serverErrors;
+            ToDoItem[] items = new ToDoItem[0];
+            _sync.GotItems += (gotItems) => items = gotItems.ToArray();
+            SendRequests();
+
+            SyncRepete(3);
+
+            items.Should().HaveCount(10);
+        }
+
+        [TestMethod]
+        public void CanCallWhenErrors()
+            => ListErrorCalls(_regularErrors).Should()
+            .Equal(new RequestErrorType[4].Select(x => _regularErrors[0].Error.Type));
+
+        [TestMethod]
+        public void CanCallWhenServerErrors()
+            => ListErrorCalls(_serverErrors).Should()
+            .Equal(_serverErrors.Select(x => x.Error.Type));
+
+        private IEnumerable<RequestErrorType> ListErrorCalls(ErrorOnAction[] errorsOnAction)
+        {
+            List<RequestErrorType> errors = new List<RequestErrorType>();
+            _serverMock.ActionErrors = errorsOnAction;
+            _sync.ErrorOccured += (error) => errors.Add(error.Type);
+            SendRequests();
+
+            SyncRepete(3);
+
+            return errors;
+        }
+
+        private void SendRequests()
+        {
+            _sync.Add(new ToDoItem());
+            _sync.Update(new ToDoItem());
+            _sync.Delete(new ToDoItem());
+        }
+
+        private void SyncRepete(int times)
+        {
+            var method = typeof(Sync).GetMethod("Synchronize", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            for (int i = 0; i <= times; i++)
+                method.Invoke(_sync, null);
+        }
 
         private Queue<ItemSendAction> GetQueue(ApiAction[] actions)
             => new Queue<ItemSendAction>(

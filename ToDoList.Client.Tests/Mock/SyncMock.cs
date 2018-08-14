@@ -9,13 +9,15 @@ namespace ToDoList.Client.Test.Mock
 {
     class SyncMock : ISync
     {
-        public Type MementoType => typeof(object);
-
         public TimeSpan RequestDelay = TimeSpan.MinValue;
 
         public Stack<RequestError> ErrorsStack = new Stack<RequestError>();
 
         public List<ToDoItem> SyncList = new List<ToDoItem>();
+
+        public event Action<IEnumerable<ToDoItem>> GotItems;
+        public event Action<RequestError> ErrorOccured;
+        public event Action LongLoadingStarted;
 
         public void Add(ToDoItem item)
             => SyncList.Add(item);
@@ -25,19 +27,16 @@ namespace ToDoList.Client.Test.Mock
 
         public void Update(ToDoItem item) { }
 
-        public async Task<RequestResult<IEnumerable<ToDoItem>>> GetWhenSynchronisedAsync()
+        public void StartSync()
         {
-            if (RequestDelay != TimeSpan.MinValue)
-                await Task.Delay(RequestDelay);
-
-            if (ErrorsStack.Any())
-                return RequestResult.Fail<IEnumerable<ToDoItem>>(ErrorsStack.Pop());
-
-            return RequestResult.Ok<IEnumerable<ToDoItem>>(SyncList);
         }
 
-        public void Restore(object memento){}
+        public object CurrentState => SyncList;
 
-        public object Save() => this;
+        public void RestoreState(object state)
+        {
+            if (state is List<ToDoItem> syncList)
+                SyncList = syncList;
+        }
     }
 }

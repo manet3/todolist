@@ -86,9 +86,9 @@ namespace ToDoList.Client.DataServices
         {
             var res = await CheckIfLongLoading(_req.GetTasksAsync());
             if (res.IsFailure)
-                ErrorOccured(res.Error);
+                ErrorOccured?.Invoke(res.Error);
             else
-                GotItems(res.Value);
+                GotItems?.Invoke(res.Value);
 
             return !res.IsFailure;
         }
@@ -108,7 +108,7 @@ namespace ToDoList.Client.DataServices
                     _failedActions.Dequeue();
 
                 if (res.IsFailure)
-                    ErrorOccured(res.Error);
+                    ErrorOccured?.Invoke(res.Error);
             }
 
             return !res.IsFailure;
@@ -117,7 +117,7 @@ namespace ToDoList.Client.DataServices
         private T CheckIfLongLoading<T>(T task) where T : Task
         {
             if (!task.IsCompleted)
-                LongLoadingStarted();
+                LongLoadingStarted?.Invoke();
             return task;
         }
 
