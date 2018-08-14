@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ToDoList.Client.DataServices;
 using ToDoList.Shared;
 
@@ -17,7 +15,8 @@ namespace ToDoList.Client.Test.Mock
 
         public event Action<IEnumerable<ToDoItem>> GotItems;
         public event Action<RequestError> ErrorOccured;
-        public event Action LongLoadingStarted;
+        public event Action LoadingStarted;
+        public event Action LoadingSucceeded;
 
         public void Add(ToDoItem item)
             => SyncList.Add(item);

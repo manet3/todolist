@@ -186,21 +186,25 @@ namespace ToDoList.Client.ViewModels
 
         private void SubscribeOnSyncEvents()
         {
-            _sync.GotItems += (items) =>
-            {
-                ToDoItems = new ObservableHashSet(items);
-                DisplayLoadingResult(default);
-            };
+            _sync.GotItems += (items) => ToDoItems = new ObservableHashSet(items);          
 
-            _sync.ErrorOccured += DisplayLoadingResult;
+            _sync.LoadingSucceeded += OnLoadingSucceeded;
 
-            _sync.LongLoadingStarted += () => LoaderState = LoadingState.Started;
+            _sync.ErrorOccured += OnLoadingFailed;
+
+            _sync.LoadingStarted += () => LoaderState = LoadingState.Started;
         }
 
-        private void DisplayLoadingResult(RequestError error)
+        private void OnLoadingSucceeded()
+        {
+            FinishLoader(RequestErrorType.None);
+            ErrorMessage = string.Empty;
+        }
+
+        private void OnLoadingFailed(RequestError error)
         {
             FinishLoader(error.Type);
-            UpdateErrorMessage(error);
+            ErrorMessage = error.Message;
         }
 
         private void FinishLoader(RequestErrorType errorType)
@@ -214,14 +218,6 @@ namespace ToDoList.Client.ViewModels
                 case RequestErrorType.Cancelled:
                     LoaderState = LoadingState.Paused; break;
             }
-        }
-
-        private void UpdateErrorMessage(RequestError error)
-        {
-            if (error.Type == RequestErrorType.None)
-                ErrorMessage = string.Empty;
-            else
-                ErrorMessage = error.Message;
         }
     }
 }

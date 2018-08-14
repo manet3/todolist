@@ -7,15 +7,6 @@
              mc:Ignorable="d" 
              Name="loadingControl"
              d:DesignHeight="300" d:DesignWidth="300">
-    <UserControl.Style>
-        <Style TargetType="UserControl">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding ActiveState, RelativeSource={RelativeSource Self}}"  Value="None">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-    </UserControl.Style>
     
     <UserControl.Resources>
         <Storyboard x:Key="ellipseMove" RepeatBehavior="Forever">
@@ -63,6 +54,16 @@
         <Grid.DataContext>
             <viewmodels:LoaderViewModel/>
         </Grid.DataContext>
+
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding ActiveState}"  Value="None">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
 
         <ItemsControl ItemsSource="{Binding Particles}">
             <ItemsControl.ItemsPanel>

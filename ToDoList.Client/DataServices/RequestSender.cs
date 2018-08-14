@@ -42,7 +42,7 @@ namespace ToDoList.Client.DataServices
                 using (var client = new HttpClient { Timeout = WaitingTime })
                 {
                     var message = action.Method == HttpMethod.Delete
-                        ? new HttpRequestMessage(HttpMethod.Delete, new Uri(http, $"{action.Name}/{item}"))
+                        ? new HttpRequestMessage(HttpMethod.Delete, new Uri(http, $"{action.Name}/{item.ApiIdRepresentetion}"))
                         : ConfigureMessage(item, action);
 
                     var res = await client.SendAsync(message);

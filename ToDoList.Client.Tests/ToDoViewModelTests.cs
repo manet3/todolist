@@ -1,11 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ToDoList.Client.ViewModels;
-using ToDoList.Client.Tests.Mock;
-using System.Collections.Generic;
 using FluentAssertions;
 using ToDoList.Shared;
 using System.Linq;
-using System;
 using ToDoList.Client.Test.Mock;
 using System.Reflection;
 
@@ -16,7 +13,7 @@ namespace ToDoList.Client.Tests
     {
         private SyncMock _sync;
 
-        private ToDoViewModel _tested;
+        private ToDoViewModel _viewModel;
 
         private string[] _toDoItemsNames = new[] { "new item", "new item 1" };
 
@@ -24,7 +21,7 @@ namespace ToDoList.Client.Tests
         public void ViewModelInit()
         {
             _sync = new SyncMock();
-            _tested = new ToDoViewModel(_sync);
+            _viewModel = new ToDoViewModel(_sync);
         }
 
         [TestMethod]
@@ -50,29 +47,26 @@ namespace ToDoList.Client.Tests
         {
             AddToDoItems();
 
-            _tested.ClosingCommand.Execute(this);
+            _viewModel.ClosingCommand.Execute(this);
             RemoveToDoItems();
-            typeof(ToDoViewModel).GetMethod("GetSavedSession", BindingFlags.NonPublic | BindingFlags.Instance)
-                .Invoke(_tested, null);
+            _viewModel.StartCommand.Execute(this);
 
             _sync.SyncList.Select(x => x.Name).Should().Equal(_toDoItemsNames);
         }
 
         private void RemoveToDoItems()
         {
-            _tested.RemoveCommand.Execute(
+            _viewModel.RemoveCommand.Execute(
                 _toDoItemsNames.Select(n => new ToDoItem { Name = n })
                 .ToList());
         }
 
         private void AddToDoItems()
         {
-            var toDoItemsNames = _toDoItemsNames.ToList();
-            while (toDoItemsNames.Any())
+            foreach (var itemName in _toDoItemsNames)
             {
-                _tested.NewItemText = toDoItemsNames[0];
-                toDoItemsNames.RemoveAt(0);
-                _tested.AddCommand.Execute(this);
+                _viewModel.NewItemText = itemName;
+                _viewModel.AddCommand.Execute(this);
             }
         }
     }

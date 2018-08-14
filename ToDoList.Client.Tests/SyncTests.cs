@@ -17,10 +17,12 @@ namespace ToDoList.Client.Tests
 
         private RequestSenderMock _serverMock;
 
-        private ErrorOnAction[] _regularErrors = new[]{
+        private ErrorOnAction[] _regularErrors = new[]
+            {
                 new ErrorOnAction(ApiAction.Add, RequestErrorType.NoConnection),
                 new ErrorOnAction(ApiAction.Change, RequestErrorType.Cancelled),
-                new ErrorOnAction(ApiAction.Delete, RequestErrorType.Cancelled)};
+                new ErrorOnAction(ApiAction.Delete, RequestErrorType.Cancelled)
+            };
 
         private ErrorOnAction[] _serverErrors
             = new[] { new ErrorOnAction(ApiAction.Add, RequestErrorType.ServerError) };

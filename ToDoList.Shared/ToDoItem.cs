@@ -15,8 +15,7 @@ namespace ToDoList.Shared
 
         public const string DATE_FORMAT = "yy-MM-dd HH_mm_ss_fff";
 
-        public override string ToString()
-            => $"{Id}[{Timestamp.ToString(DATE_FORMAT)}]";
+        public string ApiIdRepresentetion => $"{Id}[{Timestamp.ToString(DATE_FORMAT)}]";
 
         public static ToDoItem Parse(string repr)
         {

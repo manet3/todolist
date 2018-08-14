@@ -26,7 +26,8 @@ namespace ToDoList.Client.DataServices
 
         event Action<IEnumerable<ToDoItem>> GotItems;
         event Action<RequestError> ErrorOccured;
-        event Action LongLoadingStarted;
+        event Action LoadingStarted;
+        event Action LoadingSucceeded;
 
         object CurrentState { get; }
         void RestoreState(object state);
@@ -38,7 +39,7 @@ namespace ToDoList.Client.DataServices
 
         private IRequestSender _req;
 
-        private Queue<ItemSendAction> _failedActions = new Queue<ItemSendAction>();
+        private Queue<ItemSendAction> _syncActions = new Queue<ItemSendAction>();
 
         private DispatcherTimer _syncTimer;
 
@@ -49,16 +50,18 @@ namespace ToDoList.Client.DataServices
 
         public event Action<RequestError> ErrorOccured;
 
-        public event Action LongLoadingStarted;
+        public event Action LoadingStarted;
+
+        public event Action LoadingSucceeded;
 
         public void Add(ToDoItem item)
-            => _failedActions.Enqueue(new ItemSendAction(item, ApiAction.Add));
+            => _syncActions.Enqueue(new ItemSendAction(item, ApiAction.Add));
 
         public void Delete(ToDoItem item)
-            => _failedActions.Enqueue(new ItemSendAction(item, ApiAction.Delete));
+            => _syncActions.Enqueue(new ItemSendAction(item, ApiAction.Delete));
 
         public void Update(ToDoItem item)
-            => _failedActions.Enqueue(new ItemSendAction(item, ApiAction.Change));
+            => _syncActions.Enqueue(new ItemSendAction(item, ApiAction.Change));
 
         public void StartSync()
         {
@@ -78,34 +81,31 @@ namespace ToDoList.Client.DataServices
 
         private async void Synchronize()
         {
-            if (!await TryFinishQueue() || !await TryGet())
-                _syncTimer.Stop();
-        }
+            LoadingStarted?.Invoke();
 
-        private async Task<bool> TryGet()
-        {
-            var res = await CheckIfLongLoading(_req.GetTasksAsync());
-            if (res.IsFailure)
-                ErrorOccured?.Invoke(res.Error);
+            var isSyncSuccessful = await TryFinishQueue();
+
+            if (isSyncSuccessful)
+                isSyncSuccessful = await TryGet();
+
+            if (isSyncSuccessful)
+                LoadingSucceeded?.Invoke();
             else
-                GotItems?.Invoke(res.Value);
-
-            return !res.IsFailure;
+                _syncTimer.Stop();
         }
 
         private async Task<bool> TryFinishQueue()
         {
             var res = RequestResult.Ok();
 
-            while (_failedActions.Any() && !res.IsFailure)
+            while (_syncActions.Any() && !res.IsFailure)
             {
-                var firstAction = _failedActions.Peek();
+                var firstAction = _syncActions.Peek();
 
-                res = await CheckIfLongLoading(
-                    _req.SendRequestAsync(firstAction.Item, firstAction.Action));
+                res = await _req.SendRequestAsync(firstAction.Item, firstAction.Action);
 
                 if (!res.IsFailure || res.Error.Type == RequestErrorType.ServerError)
-                    _failedActions.Dequeue();
+                    _syncActions.Dequeue();
 
                 if (res.IsFailure)
                     ErrorOccured?.Invoke(res.Error);
@@ -114,19 +114,23 @@ namespace ToDoList.Client.DataServices
             return !res.IsFailure;
         }
 
-        private T CheckIfLongLoading<T>(T task) where T : Task
+        private async Task<bool> TryGet()
         {
-            if (!task.IsCompleted)
-                LongLoadingStarted?.Invoke();
-            return task;
+            var res = await _req.GetTasksAsync();
+            if (res.IsFailure)
+                ErrorOccured?.Invoke(res.Error);
+            else
+                GotItems?.Invoke(res.Value);
+
+            return !res.IsFailure;
         }
 
-        public object CurrentState => _failedActions;
+        public object CurrentState => _syncActions;
 
         public void RestoreState(object state)
         {
             if (state is Queue<ItemSendAction> actions)
-                _failedActions = new Queue<ItemSendAction>(actions);
+                _syncActions = new Queue<ItemSendAction>(actions);
         }
     }
 }
