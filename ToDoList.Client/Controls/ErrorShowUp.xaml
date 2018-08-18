@@ -30,7 +30,7 @@
                        FontSize="14"
                        TextWrapping="Wrap"
                        Margin="10,2,10,2"
-                       Text="{Binding LastError}"
+                       Text="{Binding ErrorText}"
                        Name ="mesText"/>
                 
                 <Border.Style>

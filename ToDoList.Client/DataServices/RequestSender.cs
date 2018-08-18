@@ -18,17 +18,17 @@ namespace ToDoList.Client.DataServices
 
     public class RequestSender : IRequestSender
     {
-        private Uri http;
+        const int MAX_WAITING_TIME_SEC = 30;
+
+        private Uri _http;
 
         public bool IsSyncSuccessful;
 
-        private readonly TimeSpan WaitingTime = TimeSpan.FromSeconds(40);
-
         public RequestSender()
-            => http = new Uri("http://localhost:51650/");
+            => _http = new Uri("http://localhost:51650/");
 
         private HttpRequestMessage ConfigureMessage<T>(T body, ApiAction method)
-            => new HttpRequestMessage(method.Method, new Uri(http, method.Name))
+            => new HttpRequestMessage(method.Method, new Uri(_http, method.Name))
             {
                 Content = new StringContent(
                       JsonConvert.SerializeObject(body),
@@ -39,10 +39,10 @@ namespace ToDoList.Client.DataServices
         public async Task<RequestResult> SendRequestAsync(ToDoItem item, ApiAction action)
             => await RequestExceptionsHandle(async () =>
             {
-                using (var client = new HttpClient { Timeout = WaitingTime })
+                using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(MAX_WAITING_TIME_SEC) })
                 {
                     var message = action.Method == HttpMethod.Delete
-                        ? new HttpRequestMessage(HttpMethod.Delete, new Uri(http, $"{action.Name}/{item.ApiIdRepresentetion}"))
+                        ? new HttpRequestMessage(HttpMethod.Delete, new Uri(_http, $"{action.Name}/{item.ApiIdRepresentetion}"))
                         : ConfigureMessage(item, action);
 
                     var res = await client.SendAsync(message);
@@ -57,9 +57,9 @@ namespace ToDoList.Client.DataServices
         public async Task<RequestResult<IEnumerable<ToDoItem>>> GetTasksAsync()
             => await RequestExceptionsHandle(async () =>
               {
-                  using (var client = new HttpClient { Timeout = WaitingTime })
+                  using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(MAX_WAITING_TIME_SEC) })
                   {
-                      var res = await client.GetAsync(new Uri(http, ApiAction.List.Name));
+                      var res = await client.GetAsync(new Uri(_http, ApiAction.List.Name));
                       var json = await res.Content.ReadAsStringAsync();
 
                       if (res.StatusCode == HttpStatusCode.OK)

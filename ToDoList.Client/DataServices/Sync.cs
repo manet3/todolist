@@ -65,9 +65,8 @@ namespace ToDoList.Client.DataServices
 
         public void StartSync()
         {
-            Synchronize();
             SyncTimerInit();
-            _syncTimer.Start();
+            Synchronize();
         }
 
         private void SyncTimerInit()
@@ -82,6 +81,7 @@ namespace ToDoList.Client.DataServices
         private async void Synchronize()
         {
             LoadingStarted?.Invoke();
+            _syncTimer?.Stop();
 
             var isSyncSuccessful = await TryFinishQueue();
 
@@ -89,9 +89,10 @@ namespace ToDoList.Client.DataServices
                 isSyncSuccessful = await TryGet();
 
             if (isSyncSuccessful)
+            {
                 LoadingSucceeded?.Invoke();
-            else
-                _syncTimer.Stop();
+                _syncTimer?.Start();
+            }
         }
 
         private async Task<bool> TryFinishQueue()
