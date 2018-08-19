@@ -20,13 +20,30 @@ namespace ToDoList.Client.ViewModels
 
         public ObservableCollection<Ellipse> Particles { get; set; }
 
-        public ICommand RestartCommand { get; set; }
-
         int _retryAfterSec;
         public int RetryAfterSec
         {
             get => _retryAfterSec;
             set => SetValue(ref _retryAfterSec, value);
+        }
+
+        private Command _restartCammand = new Command((obj) => { }, () => false);
+        public ICommand RestartCommand
+        {
+            get => _restartCammand;
+            set
+            {
+                if (value == null)
+                    return;
+                var appendedCommand = new Command(
+                    (obj) =>
+                    {
+                        ActiveState = LoadingState.None;
+                        value.Execute(obj);
+                    },
+                    () => value.CanExecute(this));
+                SetValue(ref _restartCammand, appendedCommand);
+            }
         }
 
         bool _autoRestart;
@@ -35,6 +52,8 @@ namespace ToDoList.Client.ViewModels
             get => _autoRestart;
             set
             {
+                if (!RestartCommand.CanExecute(this))
+                    return;
                 SetValue(ref _autoRestart, value);
                 RestartCountdown();
             }
@@ -104,14 +123,7 @@ namespace ToDoList.Client.ViewModels
                 RetryAfterSec = i;
                 await Task.Delay(new TimeSpan(0, 0, 1));
             }
-            Restart();
-        }
-
-        public void Restart()
-        {
-            ActiveState = LoadingState.None;
-
-            if (RestartCommand != null && RestartCommand.CanExecute(this))
+            if (RestartCommand.CanExecute(this))
                 RestartCommand.Execute(this);
         }
 
