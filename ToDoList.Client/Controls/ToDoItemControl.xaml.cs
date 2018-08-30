@@ -31,38 +31,16 @@ namespace ToDoList.Client.Controls
         static ToDoItemControl()
         {
             ItemChangedCommandProperty = DependencyProperty.Register(
-                "ItemChangedCommand", typeof(ICommand), typeof(ToDoItemControl),
-                new FrameworkPropertyMetadata(new PropertyChangedCallback(CommandAssignedCallback)));
+                "ItemChangedCommand", typeof(ICommand), typeof(ToDoItemControl));
 
             ItemModelProperty = DependencyProperty.Register(
-                "ItemModel", typeof(ToDoItem), typeof(ToDoItemControl),
-                new FrameworkPropertyMetadata(new PropertyChangedCallback(ModelAssignedCallback)));
-
+                "ItemModel", typeof(ToDoItem), typeof(ToDoItemControl));
         }
 
-        private static void ModelAssignedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        public void OnCheckedChanged(object sender, RoutedEventArgs args)
         {
-            if (e.NewValue == null)
-                return;
-
-            var viewModel = new ItemViewModel((ToDoItem)e.NewValue);
-
-            viewModel.UpdateTimestamp();
-
-            ((ToDoItemControl)d).DataContext = viewModel;
-        }
-
-        private static void CommandAssignedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var obj = (ToDoItemControl)d;
-
-            Action<object, RoutedEventArgs> onChanged
-                = (s, ev) => ((ItemViewModel)obj.DataContext)
-                .GetOnChangedAction((ICommand)e.NewValue)
-                .Invoke();
-
-            obj.TaskCheckBox.Checked += new RoutedEventHandler(onChanged);
-            obj.TaskCheckBox.Unchecked += new RoutedEventHandler(onChanged);
+            if (ItemChangedCommand.CanExecute(this))
+                ItemChangedCommand.Execute(ItemModel);
         }
 
         public ToDoItemControl()

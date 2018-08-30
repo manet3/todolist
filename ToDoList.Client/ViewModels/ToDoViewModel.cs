@@ -143,6 +143,7 @@ namespace ToDoList.Client.ViewModels
             if (ToDoItems.Add(newItem))
             {
                 NewItemText = "";
+                newItem.UpdateTimestamp();
                 _sync.Add(newItem);
             }
             else
@@ -153,6 +154,9 @@ namespace ToDoList.Client.ViewModels
         #endregion
 
         private async void ShowTemporalMessage(string message)
+            => await ShowTemporalMessageAsync(message);
+
+        private async Task ShowTemporalMessageAsync(string message)
         {
             TemporalNotificationMessage = message;
             await Task.Delay(TimeSpan.FromSeconds(MESSAGE_DELAY_SEC));
@@ -163,7 +167,11 @@ namespace ToDoList.Client.ViewModels
         public Command ChangeCommand { get; set; }
 
         private void SendChangeItem(object obj)
-            => _sync.Update((ToDoItem)obj);
+        {
+            var item = (ToDoItem)obj;
+            item.UpdateTimestamp();
+            _sync.Update(item);
+        }
         #endregion
 
         #region Remove items
@@ -179,6 +187,7 @@ namespace ToDoList.Client.ViewModels
             foreach (var item in selectedArray)
             {
                 ToDoItems.Remove(item);
+                item.UpdateTimestamp();
                 _sync.Delete(item);
             }
         }
@@ -203,8 +212,19 @@ namespace ToDoList.Client.ViewModels
 
         private void OnLoadingFailed(RequestError error)
         {
-            FinishLoader(error.Type);
-            ErrorMessage = error.Message;
+            if (error.Type == RequestErrorType.ServerError)
+                OnServerError(error);
+            else
+            {
+                FinishLoader(error.Type);
+                ErrorMessage = error.Message;
+            }
+        }
+
+        private async void OnServerError(RequestError error)
+        {
+            await ShowTemporalMessageAsync(error.Message);
+            _sync.StartSync();
         }
 
         private void FinishLoader(RequestErrorType errorType)

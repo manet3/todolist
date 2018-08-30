@@ -65,7 +65,8 @@ namespace ToDoList.Client.DataServices
 
         public void StartSync()
         {
-            SyncTimerInit();
+            if (_syncTimer == null)
+                SyncTimerInit();
             Synchronize();
         }
 
@@ -78,7 +79,7 @@ namespace ToDoList.Client.DataServices
             _syncTimer.Tick += (s, e) => Synchronize();
         }
 
-        private async void Synchronize()
+        public async void Synchronize()
         {
             LoadingStarted?.Invoke();
             _syncTimer?.Stop();
@@ -119,7 +120,11 @@ namespace ToDoList.Client.DataServices
         {
             var res = await _req.GetTasksAsync();
             if (res.IsFailure)
+            {
+                if (res.Error.Type == RequestErrorType.ServerError)
+                    res.Error = new RequestError(res.Error.Message, RequestErrorType.NoConnection);
                 ErrorOccured?.Invoke(res.Error);
+            }
             else
                 GotItems?.Invoke(res.Value);
 

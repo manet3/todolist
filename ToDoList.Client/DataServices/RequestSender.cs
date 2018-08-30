@@ -27,13 +27,15 @@ namespace ToDoList.Client.DataServices
         public RequestSender()
             => _http = new Uri("http://localhost:51650/");
 
-        private HttpRequestMessage ConfigureMessage<T>(T body, ApiAction method)
-            => new HttpRequestMessage(method.Method, new Uri(_http, method.Name))
+        private HttpRequestMessage ConfigureMessage(ToDoItem item, ApiAction action)
+            => action.Method == HttpMethod.Delete
+            ? new HttpRequestMessage(HttpMethod.Delete, new Uri(_http, $"{action.Name}/{new ToDoItemUrlStringRepresenter(item)}"))
+            : new HttpRequestMessage(action.Method, new Uri(_http, action.Name))
             {
                 Content = new StringContent(
-                      JsonConvert.SerializeObject(body),
-                      Encoding.UTF8,
-                      "application/json")
+                        JsonConvert.SerializeObject(item),
+                        Encoding.UTF8,
+                        "application/json")
             };
 
         public async Task<RequestResult> SendRequestAsync(ToDoItem item, ApiAction action)
@@ -41,9 +43,7 @@ namespace ToDoList.Client.DataServices
             {
                 using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(MAX_WAITING_TIME_SEC) })
                 {
-                    var message = action.Method == HttpMethod.Delete
-                        ? new HttpRequestMessage(HttpMethod.Delete, new Uri(_http, $"{action.Name}/{item.ApiIdRepresentetion}"))
-                        : ConfigureMessage(item, action);
+                    var message = ConfigureMessage(item, action);
 
                     var res = await client.SendAsync(message);
 

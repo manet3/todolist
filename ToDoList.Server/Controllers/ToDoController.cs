@@ -61,15 +61,15 @@ namespace ToDoList.Server.Controllers
         [HttpDelete]
         public void Delete(string id)
         {
-            ThrowIfLiteDbNotExists();
+            //ThrowIfLiteDbNotExists();
 
-            OnNullThrowArgumentException(id);
+            //OnNullThrowArgumentException(id);
 
-            var item = ToDoItem.Parse(id);
-            var result = _repository.DeleteById(item.Id, item.Timestamp);
+            //var item = ToDoItem.Parse(id);
+            //var result = _repository.DeleteById(item.Id, item.Timestamp);
 
-            if (result.IsFailure)
-                throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
+            //if (result.IsFailure)
+            //    throw GetExceptionWith(result.Error, HttpStatusCode.InternalServerError);
         }
 
         private void OnNullThrowArgumentException(object argument)

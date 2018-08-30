@@ -24,8 +24,11 @@ namespace ToDoList.Client.Tests
                 new ErrorOnAction(ApiAction.Delete, RequestErrorType.Cancelled)
             };
 
-        private ErrorOnAction[] _serverErrors
-            = new[] { new ErrorOnAction(ApiAction.Add, RequestErrorType.ServerError) };
+        private ErrorOnAction[] _serverErrors = new[]
+            {
+                new ErrorOnAction(ApiAction.Add, RequestErrorType.ServerError),
+                new ErrorOnAction(ApiAction.Change, RequestErrorType.ServerError)
+            };
 
         [TestInitialize]
         public void MakeSync()
@@ -82,13 +85,19 @@ namespace ToDoList.Client.Tests
         public void CanGetWhenServerErrors()
         {
             _serverMock.ActionErrors = _serverErrors;
-            ToDoItem[] items = new ToDoItem[0];
-            _sync.GotItems += (gotItems) => items = gotItems.ToArray();
-            SendRequests();
+            CanGet();
+        }
 
-            SyncRepete(3);
+        [TestMethod]
+        public void CanInterpreteServerErrorDurringGet()
+        {
+            _serverMock.ActionErrors = new[] { new ErrorOnAction(ApiAction.List, RequestErrorType.ServerError) };
+            RequestError gotError = default(RequestError);
+            _sync.ErrorOccured += (error) => gotError = error;
 
-            items.Should().HaveCount(10);
+            _sync.Synchronize();
+
+            gotError.Type.Should().Be(RequestErrorType.NoConnection);
         }
 
         [TestMethod]
@@ -122,10 +131,8 @@ namespace ToDoList.Client.Tests
 
         private void SyncRepete(int times)
         {
-            var method = typeof(Sync).GetMethod("Synchronize", BindingFlags.NonPublic | BindingFlags.Instance);
-
             for (int i = 0; i <= times; i++)
-                method.Invoke(_sync, null);
+                _sync.Synchronize();
         }
 
         private Queue<ItemSendAction> GetQueue(ApiAction[] actions)
