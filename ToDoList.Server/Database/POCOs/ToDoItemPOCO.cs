@@ -1,12 +1,14 @@
 ﻿using ServiceStack.DataAnnotations;
 using System;
 
-namespace ToDoList.Server.Database.Models
+namespace ToDoList.Server.Database.POCOs
 {
-    public class ItemDbModel
+    public class ToDoItemPoco
     {
         [AutoIncrement]
         public ulong Id { get; set; }
+
+        public ulong ToDoListPocoId { get; set; }
 
         [Required, Unique]
         public string Name { get; set; }
@@ -15,6 +17,5 @@ namespace ToDoList.Server.Database.Models
 
         [Required]
         public DateTime Timestamp { get;  set;}
-
     }
 }

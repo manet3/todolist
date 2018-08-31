@@ -29,7 +29,7 @@ namespace ToDoList.Client.DataServices
 
         private HttpRequestMessage ConfigureMessage(ToDoItem item, ApiAction action)
             => action.Method == HttpMethod.Delete
-            ? new HttpRequestMessage(HttpMethod.Delete, new Uri(_http, $"{action.Name}/{new ToDoItemUrlStringRepresenter(item)}"))
+            ? new HttpRequestMessage(HttpMethod.Delete, new Uri(_http, $"{action.Name}/{new SyncEntityUrlStringRepresentation(item)}"))
             : new HttpRequestMessage(action.Method, new Uri(_http, action.Name))
             {
                 Content = new StringContent(

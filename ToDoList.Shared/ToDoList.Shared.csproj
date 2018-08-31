@@ -39,10 +39,11 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SyncEntityBase.cs" />
     <Compile Include="ToDoItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ToDoItemUrlStringRepresenter.cs" />
-    <Compile Include="ToDoList.cs" />
+    <Compile Include="SyncEntityUrlStringRepresentation.cs" />
+    <Compile Include="ToDoItemsList.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

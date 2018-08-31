@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using System.Web.Http;
-using ToDoList.Server.Database.Models;
+using ToDoList.Server.Database.POCOs;
 using ToDoList.Shared;
 using ToDoList.Server.Database;
 using Unity;
@@ -13,10 +13,10 @@ namespace ToDoList.Server
         public static void Register(HttpConfiguration config)
         {
             // Web API configuration and services
-            Mapper.Initialize(m => m.CreateMap<ToDoItem, ItemDbModel>());
-
             var container = new UnityContainer();
-            container.RegisterType<IToDoItemsRepository, ToDoItemsLiteRepository>(new HierarchicalLifetimeManager());
+            container.RegisterType<IStorageRepository, ItemsRepository>(new HierarchicalLifetimeManager());
+            container.RegisterType<IStorageRepository, ItemsRepository>(new HierarchicalLifetimeManager());
+
             config.DependencyResolver = new UnityResolver(container);
 
             // Web API routes
@@ -24,8 +24,8 @@ namespace ToDoList.Server
 
             config.Routes.MapHttpRoute(
                 name: "ApiDefault",
-                routeTemplate: "{action}/{id}",
-                defaults: new { controller = "todo", id = RouteParameter.Optional});
+                routeTemplate: "{controller}/{action}/{id}",
+                defaults: new { id = RouteParameter.Optional});
         }
     }
 }
