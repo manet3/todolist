@@ -3,21 +3,19 @@ using ToDoList.Server.Database;
 using ToDoList.Server.Database.POCOs;
 using AutoMapper;
 using ToDoList.Shared;
-using System.Net;
-using System.Net.Http;
 using System.Collections.Generic;
 
 namespace ToDoList.Server.Controllers
 {
-    public class ToDoListsController : ApiController
+    public class ListsController : ApiController
     {
         private IListsRepository _repository;
 
-        public ToDoListsController(IListsRepository repository)
+        public ListsController(IListsRepository repository)
         {
             _repository = repository;
             _repository.ConfigureStorage();
-            Mapper.Initialize(m => m.CreateMap<ToDoItemsList, ToDoListPoco>());
+            Mapper.Initialize(m => m.CreateMap<ToDoItemsList, ListPoco>());
         }
 
         public IEnumerable<ToDoItemsList> GetAll()
@@ -34,7 +32,7 @@ namespace ToDoList.Server.Controllers
         {
             ControllerExceptionHandler.ThrowIfNullArgument(list);
 
-            var result = _repository.Add(Mapper.Map<ToDoListPoco>(list));
+            var result = _repository.Add(Mapper.Map<ListPoco>(list));
 
             ControllerExceptionHandler.ThrowIfFailure(result);
         }

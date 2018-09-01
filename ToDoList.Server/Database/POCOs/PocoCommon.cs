@@ -3,19 +3,15 @@ using System;
 
 namespace ToDoList.Server.Database.POCOs
 {
-    public class ToDoItemPoco
+    public class PocoCommon
     {
         [AutoIncrement]
         public ulong Id { get; set; }
 
-        public ulong ToDoListPocoId { get; set; }
-
         [Required, Unique]
         public string Name { get; set; }
 
-        public bool IsChecked { get; set; }
-
         [Required]
-        public DateTime Timestamp { get;  set;}
+        public DateTime Timestamp { get; set; }
     }
 }

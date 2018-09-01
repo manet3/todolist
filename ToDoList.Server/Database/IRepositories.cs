@@ -12,18 +12,18 @@ namespace ToDoList.Server.Database
 
     public interface IListsRepository : IStorageRepository
     {
-        Result Add(ToDoListPoco list);
+        Result Add(ListPoco list);
 
-        Result<IEnumerable<ToDoListPoco>> Get();
+        Result<IEnumerable<ListPoco>> Get();
 
         Result DeleteById(ulong id, DateTime timestamp);
     }
 
     public interface IItemsRepository : IStorageRepository
     {
-        Result Add(ToDoItemPoco list);
+        Result Add(ItemPoco list);
 
-        Result UpdateItem(ToDoItemPoco item);
+        Result Update(ItemPoco item);
 
         Result DeleteById(ulong id, DateTime timestamp);
     }

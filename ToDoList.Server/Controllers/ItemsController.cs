@@ -6,15 +6,15 @@ using ToDoList.Shared;
 
 namespace ToDoList.Server.Controllers
 {
-    public class ToDoItemsController : ApiController
+    public class ItemsController : ApiController
     {
         private IItemsRepository _repository;
 
-        public ToDoItemsController(IItemsRepository repository)
+        public ItemsController(IItemsRepository repository)
         {
             _repository = repository;
             _repository.ConfigureStorage();
-            Mapper.Initialize(m => m.CreateMap<ToDoItem, ToDoItemPoco>());
+            Mapper.Initialize(m => m.CreateMap<ToDoItem, ItemPoco>());
         }
 
         [HttpPost]
@@ -22,7 +22,7 @@ namespace ToDoList.Server.Controllers
         {
             ControllerExceptionHandler.ThrowIfNullArgument(item);
 
-            var result = _repository.Add(Mapper.Map<ToDoItemPoco>(item));
+            var result = _repository.Add(Mapper.Map<ItemPoco>(item));
 
             ControllerExceptionHandler.ThrowIfFailure(result);
         }
@@ -32,7 +32,7 @@ namespace ToDoList.Server.Controllers
         {
             ControllerExceptionHandler.ThrowIfNullArgument(item);
 
-            var result = _repository.UpdateItem(Mapper.Map<ToDoItemPoco>(item));
+            var result = _repository.Update(Mapper.Map<ItemPoco>(item));
 
             ControllerExceptionHandler.ThrowIfFailure(result);
         }

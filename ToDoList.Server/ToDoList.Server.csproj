@@ -206,19 +206,20 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\ControllerExceptionHandler.cs" />
-    <Compile Include="Controllers\ToDoItemsController.cs" />
-    <Compile Include="Controllers\ToDoListsController.cs" />
+    <Compile Include="Controllers\ItemsController.cs" />
+    <Compile Include="Controllers\ListsController.cs" />
+    <Compile Include="Database\POCOs\PocoCommon.cs" />
     <Compile Include="Database\RepositoryBase.cs" />
     <Compile Include="Database\Services\DbConnectionDistributor.cs" />
     <Compile Include="Database\IRepositories.cs" />
-    <Compile Include="Database\POCOs\ToDoListPoco.cs" />
+    <Compile Include="Database\POCOs\ListPoco.cs" />
     <Compile Include="Database\ItemsRepository.cs" />
-    <Compile Include="Database\Services\DbExceptionHandler.cs" />
+    <Compile Include="Database\Services\DbExceptionsHandler.cs" />
     <Compile Include="Database\ListsRepository.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Database\POCOs\ToDoItemPoco.cs" />
+    <Compile Include="Database\POCOs\ItemPoco.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnityResolver.cs" />
   </ItemGroup>

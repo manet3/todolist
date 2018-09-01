@@ -1,68 +1,47 @@
 ﻿using ToDoList.Server.Database.POCOs;
-using ToDoList.Server.Database.Services;
 using CSharpFunctionalExtensions;
 using ServiceStack;
 using ServiceStack.OrmLite;
 using System;
-using System.Collections.Generic;
 
 namespace ToDoList.Server.Database
 {
     public class ItemsRepository : RepositoryBase, IItemsRepository
     {
         public override void ConfigureStorage()
-            => ExceptionsHandler.DbConfiguration = CreateTablesIfNot(typeof(ToDoItemPoco));
+            => ExceptionsHandler.DbConfiguration = CreateTablesIfNot(typeof(ItemPoco));
 
-        public Result Add(ToDoItemPoco item)
+        public Result Add(ItemPoco item)
             => ExceptionsHandler.DbExceptionsHandle(
 
-                () => DbConn.Exists<ToDoItemPoco>(new { Name = item.Name })
+                () => DbConn.Exists<ItemPoco>(new { Name = item.Name })
                 ? Result.Fail("This item already exists.")
                 : Result.Ok(DbConn.Insert(item)),
 
                 "Could not add item to DB.");
 
-        public Result<IEnumerable<ToDoItemPoco>> List()
-            => ExceptionsHandler.DbExceptionsHandle(
-
-                () => Result.Ok<IEnumerable<ToDoItemPoco>>(DbConn.Select<ToDoItemPoco>()),
-
-                "Failed to get DB table");
-
-        public Result UpdateItem(ToDoItemPoco item)
+        public Result Update(ItemPoco item)
             => ExceptionsHandler.DbExceptionsHandle(() =>
             {
-                var dbItem = DbConn.Single<ToDoItemPoco>((x) => x.Name == item.Name);
+                var dbItemGot = GetById<ItemPoco>(item.Id);
 
-                if (dbItem == null)
-                    return Result.Fail("Item not found");
+                if (dbItemGot.IsSuccess && item.Timestamp >= dbItemGot.Value.Timestamp)
+                    UpdateItemById(item);
 
-                if (item.Timestamp >= dbItem.Timestamp)
-                    DbConn.Update<ToDoItemPoco>(
-                        new
-                        {
-                            IsChecked = item.IsChecked,
-                            Timestamp = item.Timestamp
-                        },
-                        where: x => x.Name == item.Name);
-
-                return Result.Ok();
+                return dbItemGot;
             },
-                "Failed to update item");
+                "Failed to update item.");
 
         public Result DeleteById(ulong id, DateTime timestamp)
             => ExceptionsHandler.DbExceptionsHandle(() =>
             {
-                var dbItem = DbConn.Single<ToDoItemPoco>(x => x.Id == id);
+                var dbItemGot = GetById<ItemPoco>(id);
 
-                if (dbItem == null)
-                    return Result.Fail("Item not found");
+                if (dbItemGot.IsSuccess && timestamp >= dbItemGot.Value.Timestamp)
+                    DbConn.Delete<ItemPoco>(x => x.Id == id);
 
-                if (timestamp >= dbItem.Timestamp)
-                    DbConn.Delete<ToDoItemPoco>(x => x.Id == id);
-
-                return Result.Ok();
+                return dbItemGot;
             },
-                "Failed to delete item");
+                "Failed to delete item.");
     }
 }

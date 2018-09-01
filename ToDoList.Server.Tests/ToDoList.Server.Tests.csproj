@@ -124,7 +124,8 @@
     <Reference Include="System.Net.Http.WebRequest" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ToDoItemsLiteRepositoryTests.cs" />
+    <Compile Include="ItemsRepositoryTests.cs" />
+    <Compile Include="ListsRepositoryTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

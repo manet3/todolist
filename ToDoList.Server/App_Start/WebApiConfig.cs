@@ -1,7 +1,4 @@
-﻿using AutoMapper;
-using System.Web.Http;
-using ToDoList.Server.Database.POCOs;
-using ToDoList.Shared;
+﻿using System.Web.Http;
 using ToDoList.Server.Database;
 using Unity;
 using Unity.Lifetime;
@@ -14,8 +11,8 @@ namespace ToDoList.Server
         {
             // Web API configuration and services
             var container = new UnityContainer();
-            container.RegisterType<IStorageRepository, ItemsRepository>(new HierarchicalLifetimeManager());
-            container.RegisterType<IStorageRepository, ItemsRepository>(new HierarchicalLifetimeManager());
+            container.RegisterType<IItemsRepository, ItemsRepository>(new HierarchicalLifetimeManager());
+            container.RegisterType<IListsRepository, ListsRepository>(new HierarchicalLifetimeManager());
 
             config.DependencyResolver = new UnityResolver(container);
 

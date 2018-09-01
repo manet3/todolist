@@ -2,6 +2,7 @@
 using ServiceStack.OrmLite;
 using System;
 using System.Data;
+using ToDoList.Server.Database.POCOs;
 using ToDoList.Server.Database.Services;
 
 namespace ToDoList.Server.Database
@@ -14,7 +15,7 @@ namespace ToDoList.Server.Database
 
         public RepositoryBase()
         {
-            DbConn = DbConnectionDistributor.DbConnection;
+            DbConn = DbConnectionDistributor.OpenConnection();
             ExceptionsHandler = new DbExceptionsHandler
             {
                 DbConfiguration = DbConnectionDistributor.DbConnectingResult
@@ -32,10 +33,23 @@ namespace ToDoList.Server.Database
             },
                 "Failed to create Db table");
 
-        public void Dispose()
+        protected Result<T> GetById<T>(ulong id) where T : PocoCommon
         {
-            DbConn?.Dispose();
-            DbConn = null;
+            var dbItem = DbConn.Single<T>(x => x.Id == id);
+
+            return dbItem == null ? Result.Fail<T>("Item not found") : Result.Ok(dbItem);
         }
+
+        protected void UpdateItemById(ItemPoco item)
+        {
+            DbConn.Update<ItemPoco>(new
+            {
+                IsChecked = item.IsChecked,
+                Timestamp = item.Timestamp
+            },
+            where: x => x.Id == item.Id);
+        }
+
+        public void Dispose() => DbConnectionDistributor.CloseConnection();
     }
 }
