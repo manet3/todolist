@@ -39,6 +39,7 @@ namespace ToDoList.Client.Tests
 
             RemoveToDoItems();
 
+            _viewModel.ToDoItems.Should().HaveCount(0);
             _sync.SyncList.Should().HaveCount(0);
         }
 

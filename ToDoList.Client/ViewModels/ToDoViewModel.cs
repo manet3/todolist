@@ -7,6 +7,7 @@ using ToDoList.Shared;
 using ToDoList.Client.DataServices;
 using ToDoList.Client.ViewModels.Common;
 using ToDoList.Client.Controls;
+using System.Linq;
 
 namespace ToDoList.Client.ViewModels
 {
@@ -31,10 +32,17 @@ namespace ToDoList.Client.ViewModels
             return isUnique;
         }
 
-        public new void Remove(ToDoItem item)
+        public new bool Remove(ToDoItem item)
         {
-            base.Remove(item);
-            _hashSet.Remove(item);
+            var existingItem = _hashSet.FirstOrDefault(x => x.Equals(item));
+
+            if (existingItem == null)
+                return false;
+
+            base.Remove(existingItem);
+            _hashSet.Remove(existingItem);
+
+            return true;
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ToDoList.Client.DataServices;
 using ToDoList.Shared;
 
@@ -22,7 +23,7 @@ namespace ToDoList.Client.Test.Mock
             => SyncList.Add(item);
 
         public void Delete(ToDoItem item)
-            => SyncList.Remove(item);
+            => SyncList.Remove(SyncList.First(x => x.Name == item.Name));
 
         public void Update(ToDoItem item) { }
 
