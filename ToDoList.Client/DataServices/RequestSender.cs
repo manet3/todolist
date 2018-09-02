@@ -13,7 +13,7 @@ namespace ToDoList.Client.DataServices
     {
         Task<RequestResult> SendRequestAsync(ToDoItem item, ApiAction action);
 
-        Task<RequestResult<IEnumerable<ToDoItem>>> GetTasksAsync();
+        Task<RequestResult<IEnumerable<ToDoItemsList>>> GetTasksAsync();
     }
 
     public class RequestSender : IRequestSender
@@ -54,7 +54,7 @@ namespace ToDoList.Client.DataServices
                 }
             });
 
-        public async Task<RequestResult<IEnumerable<ToDoItem>>> GetTasksAsync()
+        public async Task<RequestResult<IEnumerable<ToDoItemsList>>> GetTasksAsync()
             => await RequestExceptionsHandle(async () =>
               {
                   using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(MAX_WAITING_TIME_SEC) })
@@ -64,11 +64,11 @@ namespace ToDoList.Client.DataServices
 
                       if (res.StatusCode == HttpStatusCode.OK)
                       {
-                          var resValue = JsonConvert.DeserializeObject<IEnumerable<ToDoItem>>(json);
+                          var resValue = JsonConvert.DeserializeObject<IEnumerable<ToDoItemsList>>(json);
                           return RequestResult.Ok(resValue);
                       }
 
-                      return RequestResult.Fail<IEnumerable<ToDoItem>>(GetResponseErrorRepresentation(res));
+                      return RequestResult.Fail<IEnumerable<ToDoItemsList>>(GetResponseErrorRepresentation(res));
                   }
               });
 

@@ -96,6 +96,7 @@
     </Compile>
     <Compile Include="DataServices\SessionSaver.cs" />
     <Compile Include="InjectionConfig.cs" />
+    <Compile Include="ObservableHashSet.cs" />
     <Compile Include="RequestResult.cs" />
     <Compile Include="ViewModels\LoaderViewModel.cs" />
     <Compile Include="DataServices\ApiAction.cs" />

@@ -12,12 +12,12 @@ namespace ToDoList.Client.DataServices
 
         public object SyncState { get; private set; }
 
-        public IEnumerable<ToDoItem> List { get; private set; }
+        public IEnumerable<ToDoItemsList> Lists { get; private set; }
 
         private SessionSaver() { }
 
-        public SessionSaver(object syncState, IEnumerable<ToDoItem> list)
-            => (SyncState, List) = (syncState, list);
+        public SessionSaver(object syncState, IEnumerable<ToDoItemsList> list)
+            => (SyncState, Lists) = (syncState, list);
 
         public void SaveJson()
         {

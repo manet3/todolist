@@ -24,7 +24,7 @@ namespace ToDoList.Client.DataServices
 
         void StartSync();
 
-        event Action<IEnumerable<ToDoItem>> GotItems;
+        event Action<IEnumerable<ToDoItemsList>> GotItems;
         event Action<RequestError> ErrorOccured;
         event Action LoadingStarted;
         event Action LoadingSucceeded;
@@ -46,7 +46,7 @@ namespace ToDoList.Client.DataServices
         public Sync(IRequestSender req)
             => _req = req;
 
-        public event Action<IEnumerable<ToDoItem>> GotItems;
+        public event Action<IEnumerable<ToDoItemsList>> GotItems;
 
         public event Action<RequestError> ErrorOccured;
 

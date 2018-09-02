@@ -8,7 +8,7 @@ namespace ToDoList.Shared
 
         public string Name { get; set; }
 
-        public DateTime Timestamp { get; private set; }
+        public DateTime Timestamp { get; protected set; }
 
         public void UpdateTimestamp()
             => Timestamp = DateTime.UtcNow;
