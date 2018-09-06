@@ -14,7 +14,7 @@ namespace ToDoList.Client.Test.Mock
 
         public List<ToDoItem> SyncList = new List<ToDoItem>();
 
-        public event Action<IEnumerable<ToDoItem>> GotItems;
+        public event Action<IEnumerable<ToDoItemsList>> GotItems;
         public event Action<RequestError> ErrorOccured;
         public event Action LoadingStarted;
         public event Action LoadingSucceeded;
@@ -22,8 +22,7 @@ namespace ToDoList.Client.Test.Mock
         public void Add(ToDoItem item)
             => SyncList.Add(item);
 
-        public void Delete(ToDoItem item)
-            => SyncList.Remove(SyncList.First(x => x.Name == item.Name));
+        public void Delete(ToDoItem item) { }
 
         public void Update(ToDoItem item) { }
 

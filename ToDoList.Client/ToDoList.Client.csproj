@@ -102,9 +102,11 @@
     <Compile Include="DataServices\ApiAction.cs" />
     <Compile Include="DataServices\RequestSender.cs" />
     <Compile Include="DataServices\Sync.cs" />
+    <Compile Include="ViewModels\Modules\ObservableToDoItemsList.cs" />
     <Compile Include="ViewModels\ToDoViewModel.cs" />
     <Compile Include="ViewModels\Common\ToDoViewModelResolver.cs" />
     <Compile Include="ViewModels\Common\ViewModelBase.cs" />
+    <Compile Include="Views\Attached\ListViewAttached.cs" />
     <Compile Include="Views\Attached\WindowAttached.cs" />
     <Compile Include="Views\ToDoWindow.xaml.cs">
       <DependentUpon>ToDoWindow.xaml</DependentUpon>

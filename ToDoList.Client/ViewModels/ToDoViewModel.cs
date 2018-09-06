@@ -7,24 +7,10 @@ using ToDoList.Client.DataServices;
 using ToDoList.Client.ViewModels.Common;
 using ToDoList.Client.Controls;
 using System.Linq;
+using ToDoList.Client.ViewModels.Modules;
 
 namespace ToDoList.Client.ViewModels
 {
-    public class InteractiveToDoList : ToDoItemsList
-    {
-        public new ObservableHashSet<ToDoItem> Items { get; set; }
-
-        public InteractiveToDoList() { }
-
-        public InteractiveToDoList(ToDoItemsList baseList)
-        {
-            Id = baseList.Id;
-            Name = baseList.Name;
-            Timestamp = baseList.Timestamp;
-            Items = new ObservableHashSet<ToDoItem>(baseList.Items);
-        }
-    }
-
     public class ToDoViewModel : ViewModelBase
     {
         string _newItemText;
@@ -64,14 +50,23 @@ namespace ToDoList.Client.ViewModels
         //here 0 means 'infinity'
         private const int MESSAGE_DELAY_SEC = 5;
 
-        private ObservableHashSet<InteractiveToDoList> _toDoLists;
-        public ObservableHashSet<InteractiveToDoList> ToDoLists
+        private ObservableHashSet<ObservableToDoItemsList> _toDoLists;
+        public ObservableHashSet<ObservableToDoItemsList> ToDoLists
         {
             get => _toDoLists;
-            private set => SetValue(ref _toDoLists, value);
+            set => SetValue(ref _toDoLists, value);
         }
 
-        public InteractiveToDoList ActiveToDoList { get; set; }
+        private ObservableToDoItemsList _activeToDoList;
+        public ObservableToDoItemsList ActiveToDoList
+        {
+            get => _activeToDoList;
+            set
+            {
+                SetValue(ref _activeToDoList, value);
+                AddCommand.RaiseExecuteChanged();
+            }
+        }
 
         private ISync _sync;
 
@@ -79,15 +74,13 @@ namespace ToDoList.Client.ViewModels
         {
             StartCommand = new Command(obj => OnStart());
             ClosingCommand = new Command(obj => OnClosing());
-            AddCommand = new Command(obj => ToDoAdd(), CanToAdd);
+            AddCommand = new Command(obj => AddItem(), CanToAdd);
+            AddListCommand = new Command(obj => AddList());
             RemoveCommand = new Command(ToDoRemoveItems);
             ChangeCommand = new Command(SendChangeItem);
             SyncRetryCommand = new Command(obj => _sync.StartSync());
 
-            ToDoLists = new ObservableHashSet<InteractiveToDoList> {
-                new InteractiveToDoList { Name = "ToDolist 1",
-                    Items = new ObservableHashSet<ToDoItem>( 
-                        new[]{ new ToDoItem { Name = "Item 1", IsChecked = true} }) } };
+            ToDoLists = new ObservableHashSet<ObservableToDoItemsList>();
 
             _sync = sync;
             SubscribeOnSyncEvents();
@@ -101,7 +94,6 @@ namespace ToDoList.Client.ViewModels
             GetSavedSession();
             _sync.StartSync();
         }
-        #endregion
 
         private void GetSavedSession()
         {
@@ -109,15 +101,16 @@ namespace ToDoList.Client.ViewModels
             if (session != null)
             {
                 _sync.RestoreState(session.SyncState);
-                ToDoLists = MakeListsInteractive(session.Lists);
+                ToDoLists = MakeListsObservable(session.ToDoLists);
             }
         }
+        #endregion
 
         #region Closing
         public Command ClosingCommand { get; set; }
 
         private void OnClosing()
-            => new SessionSaver(_sync.CurrentState, ToDoLists).SaveJson();
+            => new SessionSaver { SyncState = _sync.CurrentState, ToDoLists = ToDoLists.Cast<ToDoItemsList>().ToList() }.SaveJson();
         #endregion
 
         public Command SyncRetryCommand { get; set; }
@@ -126,13 +119,13 @@ namespace ToDoList.Client.ViewModels
         public Command AddCommand { get; set; }
 
         public bool CanToAdd()
-            => !string.IsNullOrWhiteSpace(NewItemText);
+            => !string.IsNullOrWhiteSpace(NewItemText) && ActiveToDoList != null;
 
-        private void ToDoAdd()
+        private void AddItem()
         {
             var newItem = new ToDoItem { Name = NewItemText.Trim(), IsChecked = false };
 
-            if (ActiveToDoList.Items.Add(newItem))
+            if (ActiveToDoList.Add(newItem))
             {
                 NewItemText = "";
                 newItem.UpdateTimestamp();
@@ -147,13 +140,6 @@ namespace ToDoList.Client.ViewModels
 
         private async void ShowTemporalMessage(string message)
             => await ShowTemporalMessageAsync(message);
-
-        private async Task ShowTemporalMessageAsync(string message)
-        {
-            TemporalNotificationMessage = message;
-            await Task.Delay(TimeSpan.FromSeconds(MESSAGE_DELAY_SEC));
-            TemporalNotificationMessage = string.Empty;
-        }
 
         #region Change item
         public Command ChangeCommand { get; set; }
@@ -171,23 +157,35 @@ namespace ToDoList.Client.ViewModels
 
         private void ToDoRemoveItems(object obj)
         {
-            var selectedItems = (IList)obj;
-            var selectedArray = new ToDoItem[selectedItems.Count];
-
-            selectedItems.CopyTo(selectedArray, 0);
-
-            foreach (var item in selectedArray)
+            foreach (var item in ActiveToDoList.SelectedItems)
             {
-                ActiveToDoList.Items.Remove(item);
+                ActiveToDoList.Remove(item);
                 item.UpdateTimestamp();
                 _sync.Delete(item);
             }
         }
         #endregion
 
+        #region Add list
+        public Command AddListCommand { get; set; }
+
+        private void AddList()
+        {
+            var startName = "New list";
+            var counter = 0;
+            while (!ToDoLists.Add(new ObservableToDoItemsList(new ToDoItemsList
+            {
+                Name = startName + (counter == 0 ? "" : " " + counter.ToString())
+            })))
+                counter++;
+
+            ActiveToDoList = ToDoLists.Last();
+        }
+        #endregion
+
         private void SubscribeOnSyncEvents()
         {
-            _sync.GotItems += (lists) => ToDoLists = MakeListsInteractive(lists);
+            _sync.GotItems += (lists) => ToDoLists = MakeListsObservable(lists);
 
             _sync.LoadingSucceeded += OnLoadingSucceeded;
 
@@ -196,8 +194,8 @@ namespace ToDoList.Client.ViewModels
             _sync.LoadingStarted += () => LoaderState = LoadingState.Started;
         }
 
-        private ObservableHashSet<InteractiveToDoList> MakeListsInteractive(IEnumerable<ToDoItemsList> lists)
-            => new ObservableHashSet<InteractiveToDoList>(lists.Select(x => new InteractiveToDoList(x)));
+        private ObservableHashSet<ObservableToDoItemsList> MakeListsObservable(IEnumerable<ToDoItemsList> lists)
+            => new ObservableHashSet<ObservableToDoItemsList>(lists.Select(x => new ObservableToDoItemsList(x)));
 
         private void OnLoadingSucceeded()
         {
@@ -220,6 +218,13 @@ namespace ToDoList.Client.ViewModels
         {
             await ShowTemporalMessageAsync(error.Message);
             _sync.StartSync();
+        }
+
+        private async Task ShowTemporalMessageAsync(string message)
+        {
+            TemporalNotificationMessage = message;
+            await Task.Delay(TimeSpan.FromSeconds(MESSAGE_DELAY_SEC));
+            TemporalNotificationMessage = string.Empty;
         }
 
         private void FinishLoader(RequestErrorType errorType)

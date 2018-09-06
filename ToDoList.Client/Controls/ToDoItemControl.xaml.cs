@@ -39,7 +39,7 @@ namespace ToDoList.Client.Controls
 
         public void OnCheckedChanged(object sender, RoutedEventArgs args)
         {
-            if (ItemChangedCommand.CanExecute(this))
+            if (ItemChangedCommand != null && ItemChangedCommand.CanExecute(this))
                 ItemChangedCommand.Execute(ItemModel);
         }
 

@@ -108,17 +108,31 @@
                     Grid.Column="1"
                     Grid.ColumnSpan="2" 
                     Margin="0,5,0,5" >
-            
-            <TabControl.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}"/>
-                </DataTemplate>
-            </TabControl.ItemTemplate>
-            
+
+            <TabControl.ItemContainerStyle>
+                <Style TargetType="TabItem">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="TabItem">
+                                <Grid>
+                                    <Border Name="ItemBorder" BorderThickness="3" BorderBrush="Gray" Background="LightGray" CornerRadius="3">
+                                        <ContentPresenter Margin="2,2,2,2" DataContext="{TemplateBinding DataContext}" Content="{Binding Name}"/>
+                                    </Border>
+                                </Grid>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="ItemBorder" Property="Background" Value="White"></Setter>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TabControl.ItemContainerStyle>
+
             <TabControl.ContentTemplate>
                 <DataTemplate>
-                    <ListView SelectionMode="Multiple"
-                              ItemsSource="{Binding Items}">
+                    <ListView SelectionMode="Multiple" ItemsSource="{Binding}">
                         <ListView.ItemTemplate>
                             <DataTemplate >
                                 <controls:ToDoItemControl ItemModel ="{Binding}"
@@ -129,15 +143,38 @@
                     </ListView>
                 </DataTemplate>
             </TabControl.ContentTemplate>
-            
+
+            <TabControl.Template>
+                <ControlTemplate TargetType="TabControl">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        
+                        <StackPanel Orientation="Horizontal">
+                            <TabPanel IsItemsHost="True" MaxWidth="280"/>
+
+                            <Button Name="ListAddButton" Content="+"
+                                    Command="{Binding DataContext.AddListCommand,
+                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                    Style="{StaticResource add-removeButton}"
+                                    HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </StackPanel>
+
+                        <ContentPresenter Grid.Row="1"
+                                          x:Name="PART_SelectedContentHost"
+                                          ContentSource="SelectedContent"/>
+                    </Grid>
+                </ControlTemplate>
+            </TabControl.Template>
+
         </TabControl>
 
-
         <controls:Loader Background="Transparent" 
-                                    ActiveState="{Binding LoaderState}" 
-                                    RestartCommand="{Binding SyncRetryCommand}"
-                                    Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" 
-                                    VerticalAlignment="Top" 
-                                    Margin="0,0,0,5"/>
+                         ActiveState="{Binding LoaderState}" 
+                         RestartCommand="{Binding SyncRetryCommand}"
+                         Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
+                         VerticalAlignment="Top" Margin="0,0,0,5"/>
     </Grid>
 </Window>

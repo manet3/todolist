@@ -23,13 +23,13 @@ namespace ToDoList.Client.Tests.Mock
     {
         public ErrorOnAction[] ActionErrors;
 
-        public async Task<RequestResult<IEnumerable<ToDoItem>>> GetTasksAsync()
+        public async Task<RequestResult<IEnumerable<ToDoItemsList>>> GetTasksAsync()
         {
             var reqError = ActionErrors?.FirstOrDefault(e => e.Action == ApiAction.List);
             if (reqError == null)
-                return RequestResult.Ok<IEnumerable<ToDoItem>>(new ToDoItem[10]);
+                return RequestResult.Ok<IEnumerable<ToDoItemsList>>(new ToDoItemsList[10]);
 
-            return RequestResult.Fail<IEnumerable<ToDoItem>>(reqError.Error);
+            return RequestResult.Fail<IEnumerable<ToDoItemsList>>(reqError.Error);
         }
 
         public async Task<RequestResult> SendRequestAsync(ToDoItem item, ApiAction action)

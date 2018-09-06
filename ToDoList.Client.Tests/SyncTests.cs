@@ -72,7 +72,7 @@ namespace ToDoList.Client.Tests
         [TestMethod]
         public void CanGet()
         {
-            ToDoItem[] items = new ToDoItem[0];
+            ToDoItemsList[] items = new ToDoItemsList[0];
             _sync.GotItems += (gotItems) => items = gotItems.ToArray();
             SendRequests();
 

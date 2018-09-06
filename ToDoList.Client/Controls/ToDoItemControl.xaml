@@ -10,7 +10,7 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <CheckBox Margin="5,5,5,5"
-                  IsChecked="{Binding IsChecked, Mode=OneWayToSource}"
+                  IsChecked="{Binding IsChecked}"
                   Checked="OnCheckedChanged"
                   Unchecked="OnCheckedChanged">
             <CheckBox.Template>

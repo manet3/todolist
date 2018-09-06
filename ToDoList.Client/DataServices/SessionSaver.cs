@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using ToDoList.Shared;
 
 namespace ToDoList.Client.DataServices
@@ -10,14 +9,9 @@ namespace ToDoList.Client.DataServices
     {
         private const string SESSION_PATH = "session.json";
 
-        public object SyncState { get; private set; }
+        public object SyncState { get; set; }
 
-        public IEnumerable<ToDoItemsList> Lists { get; private set; }
-
-        private SessionSaver() { }
-
-        public SessionSaver(object syncState, IEnumerable<ToDoItemsList> list)
-            => (SyncState, Lists) = (syncState, list);
+        public List<ToDoItemsList> ToDoLists { get; set; }
 
         public void SaveJson()
         {

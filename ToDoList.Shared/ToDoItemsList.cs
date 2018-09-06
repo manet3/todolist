@@ -4,6 +4,6 @@ namespace ToDoList.Shared
 {
     public class ToDoItemsList : SyncEntityBase
     {
-        public HashSet<ToDoItem> Items { get; set; }
+        public IEnumerable<ToDoItem> Items { get; set; }
     }
 }

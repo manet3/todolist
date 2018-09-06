@@ -37,5 +37,8 @@ namespace ToDoList.Client
 
             return true;
         }
+
+        public static implicit operator HashSet<T>(ObservableHashSet<T> observableHashSet)
+            => new HashSet<T>(observableHashSet);
     }
 }
